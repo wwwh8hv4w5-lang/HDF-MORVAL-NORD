@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v18</title>
+<title>HDF : MORVAL-NORD v19</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5460,7 +5460,9 @@ const SON = (() => {
     feu() { if (!O.ok) return; bruit(.6, 'lowpass', 900, .4, .08, sfx, .2); },
     toux(p) { if (!O.ok) return; const s = O.spatial(p), t = t0(); for (let i = 0; i < 3; i++) bruit(.12, 'bandpass', 700, 1.5, .25 * s.v, sfx, .005, s.pan, t + i * .22); },
     porte() { if (!O.ok) return; bruit(.25, 'lowpass', 400, .7, .4); osc('sine', 80, 50, .2, .3); },
-    moteur(p) { if (!O.ok) return; const s = O.spatial(p); osc('sawtooth', 70, 110, 1.4, .06 * s.v, sfx, .2); } };
+    moteur(p) { if (!O.ok) return; const s = O.spatial(p); osc('sawtooth', 70, 110, 1.4, .06 * s.v, sfx, .2); },
+    klaxon() { if (!O.ok) return; const t = t0(); for (const f of [392, 494]) { osc('square', f, 0, .38, .07, sfx, .01, t); osc('sawtooth', f * 2, 0, .38, .02, sfx, .01, t); } },
+    choc() { if (!O.ok) return; const t = t0(); bruit(.18, 'lowpass', 420, .9, .9, sfx, .001, 0, t); osc('sine', 95, 40, .22, .8, sfx, .002, t); bruit(.35, 'bandpass', 1500, 1.4, .25, sfx, .002, 0, t + .02); bruit(.8, 'lowpass', 600, .5, .3, rev, .002, 0, t); } };
   // ambiance urbaine : rumeur, circulation lointaine, scooters, chiens, sirènes au loin
   function ambiance() {
     const s = ctx.createBufferSource(); s.buffer = bruitBuf; s.loop = true; const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 260; const g = ctx.createGain(); g.gain.value = .16; s.connect(f); f.connect(g); g.connect(amb); s.start();
@@ -5538,7 +5540,7 @@ function construireMonde(A) {
   const m = GEO.mergerLots(48, 30000), mk = a => A.R.makeMesh(a);
   const box = (x, y, z, w, h, d, col, mat) => m.add(GEO.roundBox(w, h, d, 0), M3.translate(x, y + h / 2, z), col, mat);
   const boxR = (x, y, z, w, h, d, ry, col, mat) => m.add(GEO.roundBox(w, h, d, 0), M3.mul(M3.translate(x, y + h / 2, z), M3.rotY(ry)), col, mat);
-  const sol = (x0, z0, x1, z1, y, col, mat) => m.add(new Float32Array([x0, y, z0, 0, 1, 0, x0, y, z1, 0, 1, 0, x1, y, z1, 0, 1, 0, x0, y, z0, 0, 1, 0, x1, y, z1, 0, 1, 0, x1, y, z0, 0, 1, 0]), M3.identity(), col, mat);
+  W.SOLS = []; const sol = (x0, z0, x1, z1, y, col, mat) => (y > -.03 && y < .1 && z0 < 200 && Math.min(Math.abs(x1 - x0), Math.abs(z1 - z0)) >= 1 && W.SOLS.push([Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1), y]), m.add(new Float32Array([x0, y, z0, 0, 1, 0, x0, y, z1, 0, 1, 0, x1, y, z1, 0, 1, 0, x0, y, z0, 0, 1, 0, x1, y, z1, 0, 1, 0, x1, y, z0, 0, 1, 0]), M3.identity(), col, mat));
   // quad vertical (fenêtre) : centre c, normale n (axe), largeur w, hauteur h
   const vquad = (cx, cy, cz, nx, nz, w, h, col, mat) => { const rx = -nz, rz = nx, hw = w / 2, hh = h / 2, P = (u, v) => [cx + rx * u, cy + v, cz + rz * u];
     const a = P(-hw, -hh), b = P(hw, -hh), c = P(hw, hh), d = P(-hw, hh), N = [nx, 0, nz]; m.add(new Float32Array([...a, ...N, ...b, ...N, ...c, ...N, ...a, ...N, ...c, ...N, ...d, ...N]), M3.identity(), col, mat); };
@@ -5615,7 +5617,7 @@ function construireMonde(A) {
     bx(0, d - .06, 0, 1.3, 2.2, .1, [.55, .57, .6], 22); bx(0, d - .03, 0, .02, 2.2, .1, COUL.noir, 10); bx(.85, d - .08, 1.2, .12, .2, .05, COUL.noir, 10);
     bx(w / 2 - .06, d * .62, 0, .1, 2.1, 1.0, [.32, .22, .16], 13);
     // plafonnier (émissif) : la lumière dynamique est ajoutée quand le joueur est proche
-    bx(0, d / 2, RDC - .14, .9, .05, .4, [2.2, 2.1, 1.8], 8);
+    bx(0, d / 2, RDC - .14, .9, .05, .4, [1.45, 1.4, 1.2], 8);
     // façade du hall : cadre acier, porte vitrée (un battant ouvert, l'autre fracturé), interphone, auvent
     bx(-w / 2 + .15, .05, 0, .3, RDC, .14, COUL.acier, 22); bx(w / 2 - .15, .05, 0, .3, RDC, .14, COUL.acier, 22); bx(0, .05, 2.45, w, .1, .14, [.32, .33, .35], 22); bx(0, .05, RDC - .12, w, .12, .14, [.32, .33, .35], 22); bx(0, .02, 2.55, w - .3, RDC - 2.67, .04, [.12, .15, .18], 0);   // imposte vitrée (et non plus un bandeau d'acier)
     // porte d'entrée : deux châssis fixes vitrés de part et d'autre, deux battants ouverts vers l'intérieur (passage central de 2,4 m)
@@ -5700,11 +5702,11 @@ function construireMonde(A) {
     W.BANCS.push({ x, z, ry }); coll(x - .9, x + .9, z - .9, z + .9, .5); };
   [[-30, 20, 0], [-20, 20, 0], [38, -10, PI / 2], [38, 4, PI / 2], [-66, -20, PI / 2], [-66, 0, PI / 2], [10, 50, 0], [-56, 30, 0], [78, 34, PI / 2]].forEach(b => banc(...b));
   const poub = (x, z) => { box(x, 0, z, .75, 1.05, .75, [.12, .32, .2], 6); box(x, 1.05, z, .8, .06, .8, [.1, .26, .16], 6); coll(x - .4, x + .4, z - .4, z + .4, 1.1); };
-  [[-50, -50], [-5, -50], [42, -46], [-78, -20], [-78, 20], [-14, 32], [14, 32], [56, 34], [-12, 52.5], [-8, 52.5]].forEach(p => poub(...p));
+  [[-50, -50], [-5, -50], [42, -46], [-78, -20], [-78, 20], [-14, 32], [14, 32], [56, 34], [-12, 51.95], [-8, 51.95]].forEach(p => poub(...p));
   for (let x = -30; x <= 36; x += 4) box(x, 0, 68.6, .14, .9, .14, [.2, .21, .22], 22);   // potelets de l'avenue
   const ARBRES = [[-68, -44], [-68, -30], [-68, -10], [-68, 10], [30, -40], [44, -38], [32, -20], [48, -10], [30, 0], [46, 12], [34, 18], [-60, 40], [-52, 46], [-70, 44], [84, 56], [90, 62], [-90, 50], [-88, 60], [-20, 50], [20, 50], [86, -40], [70, -40]];
   W.ARBRES = ARBRES; ARBRES.forEach(([x, z], i) => { const t = A.make('arbre', { x, z, yaw: i * 1.7, scale: .9 + (i % 3) * .12 }); t.pickable = false; coll(x - .35, x + .35, z - .35, z + .35, 6); });
-  const LAMPES = [[-50, -49], [-28, -49], [-6, -49], [16, -49], [37, -44], [54, -30], [54, -6], [54, 18], [-74, -30], [-74, -6], [-74, 18], [-56, 28], [-30, 28], [-6, 28], [18, 28], [44, 28], [56, 46], [-4, 51], [24, 51], [-26, 51], [80, 28], [92, -30], [-20, -20], [6, -20]];
+  const LAMPES = [[-50, -49], [-28, -49], [-6, -49], [16, -49], [43.6, -45.4], [54, -30], [54, -6], [54, 18], [-74, -30], [-74, -6], [-74, 18], [-56, 28], [-30, 28], [-6, 28], [18, 28], [44, 28], [56, 46], [-4, 51], [24, 51], [-26, 51], [80, 28], [92, -30], [-20, -20], [6, -20]];
   for (const [x, z] of LAMPES) { const l = A.make('lampadaire', { x, z, yaw: 0 }); l.pickable = false; W.LAMPS.push(l); coll(x - .15, x + .15, z - .15, z + .15, 6); if (l.light) { l.light.i = 26; l.light.r = 17; l.light.c = [1, .72, .4]; } }
 
   // ---------------------------------------------------------------- abords : immeubles lointains (décor), murs d'enceinte de la zone jouable
@@ -5756,7 +5758,7 @@ function construireMonde(A) {
     const z30 = texCanvas(128, 128, (g) => { g.fillStyle = '#fff'; g.beginPath(); g.arc(64, 64, 60, 0, TAU); g.fill(); g.strokeStyle = '#c81e1e'; g.lineWidth = 14; g.beginPath(); g.arc(64, 64, 52, 0, TAU); g.stroke(); g.fillStyle = '#111'; g.font = '800 52px Arial,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('30', 64, 68); });
     for (const [x, z, t, nz] of [[28, 50.5, sensI, 1], [-38, 50.5, z30, 1], [94, 26, z30, 1], [-96, 34, sensI, 1]]) { box(x, 0, z, .07, 2.3, .07, COUL.acier, 22); texQuad(t, x, 2.1, z + .05, 0, nz, .65, .65, { dist: 45, alpha: true }); coll(x - .1, x + .1, z - .1, z + .1, 2.5); }
     // poste de police de quartier (ancienne maison de quartier) : accueil, salle de fouille, 3 cellules de garde à vue (2 places chacune)
-    { const x0 = 82, x1 = 96, z0 = 36, z1 = 48, h = 4.2, zc = (z0 + z1) / 2, MUR = [.86, .84, .8], MURi = [.9, .9, .88], SOL = [.62, .64, .66], ALU = [.62, .64, .66];
+    { const x0 = 82, x1 = 96, z0 = 36, z1 = 48, h = 4.2, zc = (z0 + z1) / 2, MUR = [.74, .72, .68], MURi = [.7, .7, .68], SOL = [.62, .64, .66], ALU = [.62, .64, .66];
       const mur = (ax, az, bx2, bz, col = MUR, hh = h) => { const L = Math.hypot(bx2 - ax, bz - az); if (L < .05) return; const hx = Math.abs(bz - az) < 1e-3; box((ax + bx2) / 2, 0, (az + bz) / 2, hx ? L : .2, hh, hx ? .2 : L, col, 21); coll(Math.min(ax, bx2) - (hx ? 0 : .1), Math.max(ax, bx2) + (hx ? 0 : .1), Math.min(az, bz) - (hx ? .1 : 0), Math.max(az, bz) + (hx ? .1 : 0), hh); };
       sol(x0, z0, x1, z1, .03, SOL, 21); box((x0 + x1) / 2, h, zc, x1 - x0 + .4, .3, z1 - z0 + .4, [.55, .55, .56], 21);
       // façade ouest (entrée vitrée au centre), autres murs
@@ -5777,10 +5779,11 @@ function construireMonde(A) {
       // 3 cellules (barreaux côté couloir x = 90,6), banc béton dans chacune
       W.CELLULES = [];
       for (const [za, zb] of [[z0, 40], [40, 44], [44, z1]]) { const zm = (za + zb) / 2; for (let zz = za + .15; zz < zb - .1; zz += .2) { if (Math.abs(zz - zm) < .5) continue; box(90.6, 0, zz, .04, 2.6, .04, [.25, .27, .3], 22); } box(90.6, 2.55, zm, .08, .08, zb - za, [.25, .27, .3], 22); box(90.6, 1.0, zm, .06, .06, zb - za, [.25, .27, .3], 22);
+        for (let zz = zm - .4; zz <= zm + .41; zz += .2) box(90.67, .02, zz, .04, 2.5, .04, [.3, .32, .36], 22); for (const yy of [.05, 1.12, 2.4]) box(90.67, yy, zm, .05, .07, .98, [.3, .32, .36], 22); for (const s2 of [-1, 1]) box(90.67, .02, zm + s2 * .5, .07, 2.5, .07, [.3, .32, .36], 22); box(90.62, 1.0, zm - .3, .14, .22, .12, [.18, .18, .2], 22);   // porte de cellule (fermée) : barreaux, traverses, serrure
         coll(90.55, 90.65, za, zm - .5, 3); coll(90.55, 90.65, zm + .5, zb, 3); const porte = coll(90.55, 90.65, zm - .5, zm + .5, 3, { porteCellule: true });
         box(95.2, 0, zm, 1.2, .45, zb - za - .6, [.6, .6, .58], 21); coll(94.6, 95.8, za + .3, zb - .3, .46); if (zb < z1) mur(90.6, zb, x1, zb, MURi, 3);
         W.CELLULES.push({ i: W.CELLULES.length, za, zb, zm, porte, places: [[95.0, zm - .7], [95.0, zm + .7]], entree: [90.0, zm], dedans: [92.6, zm] }); }
-      for (const [x, z] of [[85, zc], [89.3, 38], [93, 38], [93, 42], [93, 46], [89, 46]]) box(x, h - .12, z, .9, .05, .3, [2.2, 2.2, 2.0], 8);
+      for (const [x, z] of [[85, zc], [89.3, 38], [93, 38], [93, 42], [93, 46], [89, 46]]) box(x, h - .12, z, .9, .05, .3, [1.3, 1.3, 1.2], 8);
       W.POSTE = { x0, x1, z0, z1, zc, porte: [x0 - 1.2, zc], accueil: [85.2, zc], agent: [87.0, zc], fouille: [88.9, 39], couloir: [89.3, 42] };
       // enseigne extérieure et lanterne bleue « POLICE »
       texQuad(texCanvas(1024, 460, (g, w, hh) => { const B = '#1f3f8f', R = '#d8262a';   // enseigne officielle « Commissariat de police — Morval-Nord »
@@ -5789,7 +5792,7 @@ function construireMonde(A) {
         g.beginPath(); g.arc(w / 2, 128, 38, 0, TAU); g.fillStyle = '#e8b51a'; g.fill(); g.beginPath(); g.arc(w / 2, 128, 32, 0, TAU); g.fillStyle = B; g.fill(); g.fillStyle = '#f2c230'; g.font = '700 34px Georgia,serif'; g.fillText('RF', w / 2, 140);
         g.fillStyle = '#111'; g.font = '700 44px Arial,Helvetica,sans-serif'; g.fillText('COMMISSARIAT DE POLICE', w / 2, 222); g.fillStyle = B; g.font = '800 70px Arial,Helvetica,sans-serif'; g.fillText('MORVAL-NORD', w / 2, 296);
         g.fillStyle = '#3b4a66'; g.font = '500 22px Arial,Helvetica,sans-serif'; g.fillText('ACCUEIL DU PUBLIC ET SERVICES D’INVESTIGATION', w / 2, 346); g.fillStyle = '#fff'; g.textAlign = 'left'; g.font = '700 30px Arial,Helvetica,sans-serif'; g.fillText('OUVERT 24H/24  •  URGENCES : 17', 40, hh - 31); }), x0 - .12, 3.3, zc, -1, 0, 4.0, 1.8, { dist: 110 });
-      box(x0 - .25, 2.6, zc + 2.4, .3, .3, .3, [.4, .7, 3.0], 8);
+      box(x0 - .25, 2.6, zc + 2.4, .3, .3, .3, [.3, .5, 1.7], 8);
       const drapeau = texCanvas(192, 128, (g) => { g.fillStyle = '#0d3b91'; g.fillRect(0, 0, 64, 128); g.fillStyle = '#f4f4f4'; g.fillRect(64, 0, 64, 128); g.fillStyle = '#e1202a'; g.fillRect(128, 0, 64, 128); });
       const dr2 = texCanvas(192, 128, (g) => { g.fillStyle = '#003399'; g.fillRect(0, 0, 192, 128); g.fillStyle = '#ffcc00'; for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; g.beginPath(); g.arc(96 + Math.cos(a) * 40, 64 + Math.sin(a) * 40, 6, 0, TAU); g.fill(); } });
       for (const [dz, t] of [[-3.2, drapeau], [3.2, dr2]]) { const zz = zc + dz; boxR(x0 - .9, 3.6, zz, .05, .05, 1.6, 0, COUL.acier, 22); const nd = texQuad(t, x0 - 1.6, 4.2, zz, -1, 0, 1.2, .8, { dist: 60, rough: .9 }); nd.data.drapeau = true; } W.SPOTS.mairie = [x0 - 3, zc]; W.SPOTS.poste = [x0 - 1.5, zc]; }
@@ -5811,11 +5814,11 @@ function construireMonde(A) {
     const arbre = (x, z, k = 1) => { const c = FEU[(Math.abs(Math.round(x * 7 + z * 3))) % 4]; cyl(x, 0, z, .17 * k, 3.2 * k, [.25, .2, .16], 13); sph(x, 4.1 * k, z, 1.9 * k, 1.6 * k, 1.9 * k, c, 20); sph(x + .7 * k, 5.1 * k, z - .4 * k, 1.3 * k, 1.1 * k, 1.3 * k, c.map(v => v * 1.12), 20);
       box(x, .035, z, 1.3, .02, 1.3, [.22, .2, .18], 10); coll(x - .25, x + .25, z - .25, z + .25, 4); };
     for (let x = -94; x <= -42; x += 8) arbre(x, 66.2, .95); for (let x = 62; x <= 94; x += 8) arbre(x, 66.6, .9); for (let x = -92; x <= 24; x += 9) arbre(x, -69.5, .85);
-    for (let z = -26; z <= 22; z += 8) arbre(57.4, z, .9); for (let x = -56; x <= 12; x += 11) arbre(x, -44.5, .8); for (let z = 30; z <= 52; z += 7.5) arbre(-79.5, z + 2, .8);
+    for (let z = -26; z <= 22; z += 8) arbre(57.4, z, .9); for (let x = -56; x <= 12; x += 11) { if (W.HALLS.some(H => H.inV[1] < 0 && Math.abs(H.o[0] - x) < 3.5 && Math.abs(H.o[1] + 44.5) < 14)) continue; arbre(x, -44.5, .8); } for (let z = 30; z <= 52; z += 7.5) arbre(-79.5, z + 2, .8);
     // haies taillées et murets autour des pelouses (avec passages)
     const haie = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 9)); for (let i = 0; i < n; i++) { if (i % 3 === 2) continue; const a0 = i / n, a1 = (i + .8) / n, ax = x0 + (x1 - x0) * a0, az = z0 + (z1 - z0) * a0, bx2 = x0 + (x1 - x0) * a1, bz = z0 + (z1 - z0) * a1;
       box((ax + bx2) / 2, 0, (az + bz) / 2, Math.max(.7, Math.abs(bx2 - ax)), .95, Math.max(.7, Math.abs(bz - az)), [.13, .21, .1], 20); coll(Math.min(ax, bx2) - .35, Math.max(ax, bx2) + .35, Math.min(az, bz) - .35, Math.max(az, bz) + .35, 1); } };
-    haie(24.5, -44, 54, -44); haie(26.5, 22, 54, 22); haie(-74, 28.5, -48, 28.5); haie(-48, 28.5, -48, 50); haie(78.5, 48, 96, 48);
+    haie(24.5, -44, 33, -44); haie(41.5, -44, 54, -44); haie(26.5, 22, 54, 22); haie(-74, 28.5, -48, 28.5); haie(-48, 28.5, -48, 50); haie(78.5, 48.8, 96, 48.8);
     const muret = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0); box((x0 + x1) / 2, 0, (z0 + z1) / 2, Math.max(.35, Math.abs(x1 - x0)), .6, Math.max(.35, Math.abs(z1 - z0)), [.55, .53, .5], 21); box((x0 + x1) / 2, .6, (z0 + z1) / 2, Math.max(.45, Math.abs(x1 - x0) + .1), .06, Math.max(.45, Math.abs(z1 - z0) + .1), [.62, .6, .57], 21); coll(Math.min(x0, x1) - .2, Math.max(x0, x1) + .2, Math.min(z0, z1) - .2, Math.max(z0, z1) + .2, .7); };
     muret(-60, -42.5, -30, -42.5); muret(-10, -42.5, 20, -42.5); muret(-52, 14.5, -30, 14.5); muret(0, 14.5, 20, 14.5);
     // rangée de boxes de garage taguées (nord-est)
@@ -5837,7 +5840,7 @@ function construireMonde(A) {
     // conteneurs à verre, encombrants, armoires électriques, arceaux vélo
     for (const [x, z] of [[-36, 53], [27, -46], [-77.5, -40]]) { cyl(x, 0, z, .75, 1.5, [.18, .42, .24], 6); sph(x, 1.5, z, .76, .35, .76, [.18, .42, .24], 6); cyl(x, 1.8, z, .1, .2, [.15, .15, .15], 10); coll(x - .8, x + .8, z - .8, z + .8, 1.8); }
     for (const [x, z, ry] of [[-77.6, 22.5, .2], [16.5, 31.6, -.1], [-48, -50.6, .05]]) { boxR(x, .1, z, 1.9, .22, 1.4, ry, [.78, .75, .68], 4); boxR(x + .8, .3, z + .3, .4, .8, 1.5, ry + .3, [.42, .3, .28], 4); boxR(x - 1, 0, z - .4, .7, .5, .7, ry, [.36, .25, .16], 13); coll(x - 1.3, x + 1.3, z - .9, z + .9, .8); }
-    for (const B of W.BLD) { const x = B.x0 - .4, z = (B.z0 + B.z1) / 2 + 3; if (x < -98) continue; box(x, 0, z, .45, 1.5, 1, [.5, .52, .5], 22); coll(x - .25, x + .25, z - .5, z + .5, 1.5); }
+    for (const B of W.BLD) { const x = B.x0 - .4; let z = (B.z0 + B.z1) / 2 + 3; if (B.halls.some(h => h.cote === 'W' && Math.abs(h.at - z) < 5.5)) z = (B.z0 + B.z1) / 2 - 4; if (x < -98) continue; box(x, 0, z, .45, 1.5, 1, [.5, .52, .5], 22); coll(x - .25, x + .25, z - .5, z + .5, 1.5); }
     for (let i = 0; i < 6; i++) { const x = -30 + i * 1.1; box(x, 0, 53.2, .06, .8, .06, [.3, .32, .34], 22); box(x, .78, 53.2, .06, .06, .6, [.3, .32, .34], 22); box(x, 0, 53.8, .06, .8, .06, [.3, .32, .34], 22); }
     // sol : plaques d'égout, rustines d'asphalte, ralentisseur, flaques (reflets la nuit)
     for (const [x, z] of [[-60, 76], [-20, 76], [20, 78], [60, 76], [-40, -78], [0, -79], [-20, -10], [10, -28], [-50, -5]]) cyl(x, -.01, z, .38, .045, [.1, .1, .1], 7);
@@ -5961,11 +5964,17 @@ function construireMonde(A) {
   W.SPOTS.voiture = [36, 71.2]; W.SPOTS.depart = [44.5, 68.2];
   W.SPOTS.entrees = [[30, 52], [-40, 52], [-80, 60], [96, 0], [50, -70], [-60, -70], [-98, 0]];
   W.SPOTS.fuites = [[-102, 76], [102, 76], [102, -80], [-102, -80], [0, 82], [102, 0], [-102, -40]];
-  W.SPOTS.guet = [[48, 50, 'E'], [-48, 30, 'D1'], [20, -48, 'B'], [-76, -2, 'C']];
-  W.SPOTS.parking = [-20, -15];
-  W.SPOTS.passages = [[-50, -48], [-20, -48], [15, -46], [40, -40], [52, -20], [52, 10], [50, 30], [20, 30], [-10, 30], [-40, 30], [-72, 30], [-72, 0], [-72, -30], [-60, -46], [0, 52], [-30, 52], [30, 52], [70, 26], [88, 40], [100, 53], [-88, 44], [-30, -15], [0, -25], [-45, -30], [10, 0]];
-  construireNav();
+  W.SPOTS.guet = [[48, 50, 'E'], [-46, 30, 'D1'], [20, -48, 'B'], [-76, -2, 'C']];
+  W.SPOTS.parking = [-24, -21];
+  W.SPOTS.passages = [[-50, -48], [-20, -48], [15, -46], [40, -40], [55, -20], [52, 10], [50, 30], [24, 29], [-10, 30], [-40, 30], [-72, 30], [-72, 0], [-72, -30], [-60, -46], [0, 52], [-30, 52], [30, 52], [70, 26], [78, 40], [100, 53], [-88, 44], [-30, -21], [0, -25], [-45, -30], [10, 0]];
+  construireNav(); construireSolGrille();
 }
+// grille (0,5 m) de la hauteur du sol visible : les pieds des personnages reposent sur les trottoirs, pelouses et halls au lieu de s'y enfoncer
+const SOLG = { x0: -110, z0: -92, n: 2, nx: 0, nz: 0, g: null };
+function construireSolGrille() { const G = SOLG; G.nx = Math.ceil((106 - G.x0) * G.n); G.nz = Math.ceil((92 - G.z0) * G.n); G.g = new Float32Array(G.nx * G.nz).fill(-.02);
+  for (const [x0, z0, x1, z1, y] of W.SOLS || []) { const i0 = Math.max(0, Math.ceil((x0 - G.x0) * G.n - .5)), i1 = Math.min(G.nx - 1, Math.floor((x1 - G.x0) * G.n - .5)), j0 = Math.max(0, Math.ceil((z0 - G.z0) * G.n - .5)), j1 = Math.min(G.nz - 1, Math.floor((z1 - G.z0) * G.n - .5));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * G.nx + i; if (y > G.g[k]) G.g[k] = y; } } }
+function hSol(x, z) { const G = SOLG; if (!G.g) return 0; const i = Math.floor((x - G.x0) * G.n), j = Math.floor((z - G.z0) * G.n); return i >= 0 && j >= 0 && i < G.nx && j < G.nz ? G.g[j * G.nx + i] : 0; }
 
 function solDe(x, z) { if (hallDe(x, z)) return 'hall'; if (x > 60 && x < 90 && z > -24 && z < 6) return 'synth'; for (const h of W.HERBES || []) if (x > h[0] && x < h[2] && z > h[1] && z < h[3]) return 'herbe'; return 'bitume'; }
 // ---------------------------------------------------------------- collisions (cercle contre boîtes)
@@ -6013,10 +6022,11 @@ function dessinerCarte(cv, cx, cz, rayon, rot, opts = {}) { const g = cv.getCont
   g.fillStyle = '#26303f'; g.fillRect(-98, -72, 194, 140);
   g.fillStyle = '#1d3a24'; for (const [x0, z0, x1, z1] of [[-74, -48, -64, 24], [24, -44, 54, -30], [26, -26, 54, 22], [-74, 28, -48, 50]]) g.fillRect(x0, z0, x1 - x0, z1 - z0);
   g.fillStyle = '#1f4a33'; g.fillRect(60, -24, 30, 30);
-  g.fillStyle = '#5a6577'; for (const B of W.BLD) g.fillRect(B.x0, B.z0, B.x1 - B.x0, B.z1 - B.z0); g.fillRect(-34, 56, 72, 10);
+  g.fillStyle = '#2b2f36'; g.fillRect(104.2, 49.6, 10.4, 7.8); g.fillStyle = '#3a3f46'; g.fillRect(114.6, -8, 5, 69); g.fillStyle = '#4b4136'; g.fillRect(119.6, -14, 3.6, 76); g.fillStyle = '#4a5160'; g.fillRect(54, -70, 42, 8);
+  g.fillStyle = '#5a6577'; for (const B of W.BLD) g.fillRect(B.x0, B.z0, B.x1 - B.x0, B.z1 - B.z0); g.fillRect(-34, 56, 72, 10); g.fillStyle = '#3d5a9a'; g.fillRect(82, 36, 14, 12); g.fillStyle = '#6a6458'; g.fillRect(104.6, 38.6, 9, 11);
   g.fillStyle = '#c9a24a'; for (const H of W.HALLS) { g.beginPath(); g.arc(H.centre[0], H.centre[1], 2.2, 0, TAU); g.fill(); }
   if (opts.labels) { g.fillStyle = '#e8eef6'; g.font = '600 4px Barlow Condensed, sans-serif'; g.textAlign = 'center'; for (const B of W.BLD) g.fillText(B.nom, (B.x0 + B.x1) / 2, (B.z0 + B.z1) / 2 + 1.5); g.fillText('Commerces', 2, 62);
-    g.fillStyle = '#ffd27a'; for (const H of W.HALLS) g.fillText(H.id, H.centre[0], H.centre[1] - 3); g.fillStyle = '#9fe0b0'; g.fillText('City stade', 75, -9); g.fillText('Parking', -20, -12); }
+    g.fillStyle = '#ffd27a'; for (const H of W.HALLS) g.fillText(H.id, H.centre[0], H.centre[1] - 3); g.fillStyle = '#9fe0b0'; g.fillText('City stade', 75, -9); g.fillText('Parking', -20, -12); g.fillStyle = '#9fc3ff'; g.fillText('Poste', 89, 43); g.fillText('Gare', 109, 45); g.fillText('Quai', 117, 22); }
   if (opts.marques) for (const mq of opts.marques) { g.fillStyle = mq.c; g.beginPath(); g.arc(mq.x, mq.z, mq.r || 1.8, 0, TAU); g.fill(); if (mq.anneau) { g.strokeStyle = mq.c; g.lineWidth = .8; g.beginPath(); g.arc(mq.x, mq.z, 5 + (now() / 200 % 4), 0, TAU); g.stroke(); } }
   g.restore(); }
 
@@ -6283,6 +6293,7 @@ function majArmeEnMain(dt) { const W0 = J.arme, nd = VM.nodes[W0];
   if (W0 === 'lbd' && VM.k < .5) { ox += .06; oy -= .035; oz += .02; ry += .08; }
   if (W0 === 'mains') { oy -= .045; rz = roul * .5; ry = -.12; ox = .21; oz += .03; rx -= .25; oy += Math.sin(bt) * .03 * VM.run; oz -= Math.cos(bt) * .05 * VM.run; rx += Math.cos(bt) * .25 * VM.run; }
   if (W0 === 'baton') { if (VM.swing > 0) { const e = Math.sin(VM.swing * PI); ox -= e * .2; oy += e * .08; rx -= e * 1.2; ry += e * .7; rz += e * .5; } else { rx += .12; } VM.sub.baton.brins.pos[2] = -VM.sortie * .4; }
+  if (W0 === 'gmd' && typeof GVISE !== 'undefined' && GVISE.actif) { const e = Math.min(1, GVISE.t * 4); oy += e * .05; oz += e * .02; rx += e * .35; }
   if (W0 === 'gmd' && VM.lancer > 0) { const e = Math.sin(VM.lancer * PI); oy += e * .18; oz -= e * .12; rx -= e * 1.1; }
   if (VM.menottage && PRG.cb) { oz -= .12 * Math.sin(t * 6.2) ** 2; oy += .04; rz += Math.sin(t * 6.2) * .08; }
   if (W0 === 'carte') { const e = Math.min(1, J.carteT * 2); oy += .07 * e; oz += .05 * e; ox -= .1 * e; ry += .35 * e; }
@@ -6322,11 +6333,11 @@ function majJoueur(dt, A, G) {
   if (TOUCH && OPT.aide && J.vise) aideVisee(dt, .5);
   INP.ldx = 0; INP.ldy = 0;
   // course et endurance
-  const stk = TCH.stick ? Math.hypot(TCH.stick.dx, TCH.stick.dy) : 0; J.stickRun = stk > .97 || (J.stickRun && stk > .9);   // hystérésis : plus de bascule marche/course au bord du stick
-  const veut = (KEYS.ShiftLeft || KEYS.ShiftRight || J.sprintTog || J.sprintTouch || J.stickRun) && mz > .3 && !J.vise;
-  if (J.end <= 3) J.fatigue = true; else if (J.end >= 25) J.fatigue = false;   // essoufflé : pas de reprise de la course avant 25 d'endurance (évite le tremblement marche/course à chaque image)
-  CAM.sprint = veut && !J.fatigue && J.end > 3; if (CAM.sprint) J.end = Math.max(0, J.end - dt * (12 - S.comp.physique * 1.4) * (S.dotation.chaussures ? .85 : 1)); else J.end = Math.min(100, J.end + dt * (CAM.vitesse > .5 ? 7 : 13) * (1 + S.comp.physique * .1));
-  if (J.end < 2) { J.sprintTog = false; }
+  const stk = TCH.stick ? Math.hypot(TCH.stick.dx, TCH.stick.dy) : 0; J.stickCourse = stk > .97 || (J.stickCourse && stk > .9);   // stick : course au-delà de 97 %, maintenue jusqu'à 90 %
+  const veut = (KEYS.ShiftLeft || KEYS.ShiftRight || J.sprintTog || J.sprintTouch || J.stickCourse) && mz > .3 && !J.vise;
+  if (J.end <= 3) J.essouffle = true; else if (J.end >= 25) J.essouffle = false;   // essoufflé : pas de reprise de la course avant 25 d'endurance
+  CAM.sprint = veut && !J.essouffle; if (CAM.sprint) J.end = Math.max(0, J.end - dt * (12 - S.comp.physique * 1.4) * (S.dotation.chaussures ? .85 : 1)); else J.end = Math.min(100, J.end + dt * (CAM.vitesse > .5 ? 7 : 13) * (1 + S.comp.physique * .1));
+  if (J.essouffle) { J.sprintTog = false; }
   if (CAM.sprint && J.accroupi) J.accroupi = false;
   J.accK = lerp(J.accK || 0, J.accroupi ? 1 : 0, Math.min(1, dt * 9)); J.plaqueT = Math.max(0, (J.plaqueT || 0) - dt);
   if (J.yJ > 0 || J.vy > 0) { J.vy -= 13 * dt; J.yJ = Math.max(0, (J.yJ || 0) + J.vy * dt); if (J.yJ === 0) { J.vy = 0; SON.fx.pas(solDe(CAM.x, CAM.z), 1); SON.fx.pas(solDe(CAM.x, CAM.z), .6); CAM.recul -= .025; J.atterri = .25; } }
@@ -6349,7 +6360,7 @@ function majJoueur(dt, A, G) {
   const fovV = J.vise ? (J.arme === 'lbd' ? 42 : J.arme === 'pistolet' ? 54 : 60) : (CAM.sprint ? 78 : 72); CAM.fovC += (fovV - CAM.fovC) * Math.min(1, dt * 10); A.camera.fov = CAM.fovC * PI / 180; A.camera.near = .04;
   // lampe torche (projecteur attaché à la caméra) ; plafonniers des halls
   if (J.lampe) { const lt = S.dotation.lampeTac, dm = rayonMurs(CAM.eye, CAM.fwd, 70), att = clamp(Math.pow(dm / 14, 1.6), .035, 1); J.lampeAtt = att; A.addLight({ p: [CAM.x + CAM.fwd[0] * .3, y - .12, CAM.z + CAM.fwd[2] * .3], c: [1, .97, .9], i: (lt ? 420 : 300) * att, r: lt ? 66 : 52, dir: CAM.fwd.slice(), cone: lt ? [.955, .992] : [.965, .994] }); A.addLight({ p: [CAM.x + CAM.fwd[0] * .4, y - .1, CAM.z + CAM.fwd[2] * .4], c: [1, .96, .88], i: 18 * Math.max(.3, att), r: 9, dir: CAM.fwd.slice(), cone: [.75, .9] }); }   /* faisceau principal ~50 m (65 m tactique) + halo proche */
-  for (const H of W.HALLS) { const dh = dist2(CAM.x, CAM.z, H.lum[0], H.lum[1]); if (dh < 40) { A.addLight({ p: [H.lum[0], 2.85, H.lum[1]], c: [1, .95, .84], i: 42, r: 10 }); if (dh < 14) { const q = H.P(0, H.d - 1.4); A.addLight({ p: [q[0], 2.7, q[1]], c: [.95, .97, 1], i: 18, r: 6.5 }); } } }   // néon du hall + fond (ascenseur)
+  for (const H of W.HALLS) { const dh = dist2(CAM.x, CAM.z, H.lum[0], H.lum[1]); if (dh < 40) { A.addLight({ p: [H.lum[0], 2.85, H.lum[1]], c: [1, .95, .84], i: H.dedans(CAM.x, CAM.z) ? 15 : 28, r: 9 }); if (dh < 14) { const q = H.P(0, H.d - 1.4); A.addLight({ p: [q[0], 2.7, q[1]], c: [.95, .97, 1], i: 7, r: 5.5 }); } } }   // néon du hall + fond (ascenseur)
   for (const s of W.SHOPS) if (s.ouvert && dist2(CAM.x, CAM.z, s.x, s.z) < 60 && nuit() > .3) A.addLight({ p: [s.x, 2.2, s.z + .5], c: [1, .86, .62], i: 16, r: 11 });
   // états visuels
   J.gaz = Math.max(0, J.gaz - dt * .08); $('gaz').style.opacity = clamp(J.gaz, 0, .9);
@@ -6404,12 +6415,22 @@ function recharger() { const M = S.munit, id = J.arme; if (J.rech > 0) return;
   J.rech = 1; J.rechD = (id === 'lbd' ? 2.2 : 1.5) * (1 - S.comp.tir * .08); SON.fx.rechargement(); majHudArme(); }
 // grenade : trajectoire balistique, rebond, explosion après 1,6 s
 const GRENADES = [];
-function lancerGMD(A) { const f = CAM.fwd, v = 11, p = [CAM.x + f[0] * .5, CAM.eye[1] - .2, CAM.z + f[2] * .5], vel = [f[0] * v, Math.max(1.2, f[1] * v + 2.5), f[2] * v];
-  const nd = new F.Node('gmd'); nd.addPart(A.R.makeMesh(GEO.roundBox(.07, .1, .07, 0)), null, [.25, .3, .25], 6); nd.pickable = false; A.add(nd); GRENADES.push({ p, v: vel, t: 1.6, nd, sol: false });
+const GMD_PAS = 1 / 120, GMD_FUSEE = 1.6;
+function departGMD(k) { const f = CAM.fwd, v = 5 + 8 * k; return { p: [CAM.x + f[0] * .5, CAM.eye[1] - .2, CAM.z + f[2] * .5], v: [f[0] * v, Math.max(1.2, f[1] * v + 2.5), f[2] * v] }; }
+function solGMD(x, z) { return (x > 104 && W.solH ? W.solH(x, z) : z > 200 ? 0 : hSol(x, z)) + .05; }
+function pasGMD(g, h) { const ox = g.p[0], oz = g.p[2], r = .05; g.v[1] -= 9.8 * h; g.p[0] += g.v[0] * h; g.p[1] += g.v[1] * h; g.p[2] += g.v[2] * h;
+  const y0 = solGMD(g.p[0], g.p[2]); if (g.p[1] < y0) { g.p[1] = y0; if (g.v[1] < 0) { if (!g.premier) g.premier = g.p.slice(); g.v[1] = g.v[1] < -1.2 ? -g.v[1] * .3 : 0; } g.v[0] *= .6; g.v[2] *= .6; }
+  else if (g.p[1] - y0 < .01 && g.v[1] === 0) { const fr = Math.max(0, 1 - 3.2 * h); g.v[0] *= fr; g.v[2] *= fr; }
+  for (const b of (g.p[2] > 200 ? W.COLLA : W.COLL)) { if (b.h <= g.p[1] || (b.y0 || 0) > g.p[1] || g.p[0] < b.x0 - r || g.p[0] > b.x1 + r || g.p[2] < b.z0 - r || g.p[2] > b.z1 + r) continue;
+    if (ox <= b.x0 - r || ox >= b.x1 + r) { g.p[0] = ox <= b.x0 - r ? b.x0 - r : b.x1 + r; g.v[0] *= -.4; } else if (oz <= b.z0 - r || oz >= b.z1 + r) { g.p[2] = oz <= b.z0 - r ? b.z0 - r : b.z1 + r; g.v[2] *= -.4; }
+    else { const P = { x: g.p[0], z: g.p[2] }; pousser(P, r); g.p[0] = P.x; g.p[2] = P.z; } } }
+function simulerGMD(k, pts) { const d = departGMD(k), g = { p: d.p, v: d.v, premier: null }; for (let t = 0, i = 0; t < GMD_FUSEE - 1e-6; t += GMD_PAS, i++) { pasGMD(g, GMD_PAS); if (pts && i % 4 === 0) pts.push(g.p.slice()); } return g; }
+function lancerGMD(A) { const k = GVISE.k !== null && GVISE.k !== undefined ? GVISE.k : .75, d = departGMD(k), p = d.p, vel = d.v;
+  const nd = new F.Node('gmd'); nd.addPart(A.R.makeMesh(GEO.roundBox(.07, .1, .07, 0)), null, [.25, .3, .25], 6); nd.pickable = false; A.add(nd); GRENADES.push({ p, v: vel, t: GMD_FUSEE, nd, sol: false, acc: 0, rot: 0 });
   PROC.gmdLancee(); }
-function majGrenades(dt, A) { for (let i = GRENADES.length - 1; i >= 0; i--) { const g = GRENADES[i]; g.t -= dt; g.v[1] -= 9.8 * dt; for (let k = 0; k < 3; k++) g.p[k] += g.v[k] * dt;
-    if (g.p[1] < .05) { g.p[1] = .05; g.v[1] *= -.3; g.v[0] *= .6; g.v[2] *= .6; } const P = { x: g.p[0], z: g.p[2] }; pousser(P, .05); if (P.x !== g.p[0]) g.v[0] *= -.4; if (P.z !== g.p[2]) g.v[2] *= -.4; g.p[0] = P.x; g.p[2] = P.z; g.nd.setPos(g.p[0], g.p[1], g.p[2]);
-    if (g.t <= 0) { A.remove(g.nd); GRENADES.splice(i, 1); A.fx.explosion(g.p, .45); SON.fx.gmd(g.p); A.shake = Math.max(A.shake, clamp(1.4 - dist2(CAM.x, CAM.z, g.p[0], g.p[2]) * .08, 0, .5)); const d = dist2(CAM.x, CAM.z, g.p[0], g.p[2]); if (d < 6) { J.flash = (6 - d) / 6; degatsJoueur(d < 2 ? 15 : 0, 'souffle'); } PROC.explosionGMD(g.p); } } }
+function majGrenades(dt, A) { for (let i = GRENADES.length - 1; i >= 0; i--) { const g = GRENADES[i]; g.acc = (g.acc || 0) + dt; while (g.acc >= GMD_PAS - 1e-9 && g.t > 1e-6) { pasGMD(g, GMD_PAS); g.t -= GMD_PAS; g.acc -= GMD_PAS; }
+    g.rot = (g.rot || 0) + dt * Math.hypot(g.v[0], g.v[2]) * 3; g.nd.matrix = M3.mul(M3.translate(g.p[0], g.p[1], g.p[2]), M3.mul(M3.rotY(Math.atan2(g.v[0], g.v[2])), M3.rotX(g.rot)));
+    if (g.t <= 1e-6) { A.remove(g.nd); GRENADES.splice(i, 1); A.fx.explosion(g.p, .45); SON.fx.gmd(g.p); A.shake = Math.max(A.shake, clamp(1.4 - dist2(CAM.x, CAM.z, g.p[0], g.p[2]) * .08, 0, .5)); const d = dist2(CAM.x, CAM.z, g.p[0], g.p[2]); if (d < 6) { J.flash = (6 - d) / 6; degatsJoueur(d < 2 ? 15 : 0, 'souffle'); } PROC.explosionGMD(g.p); } } }
 // impacts sur les personnes : cylindre (rayon 0,32 m, hauteur 1,8 m) ; zones tête / torse / jambes
 function touchePNJ(o, d, max) { let best = null; for (const n of NPCS) { if (n.cache || n.etat === 'embarque') continue; const h = n.couche ? .4 : 1.8;
     const ox = o[0] - n.x, oz = o[2] - n.z, a = d[0] * d[0] + d[2] * d[2], b = 2 * (ox * d[0] + oz * d[2]), c = ox * ox + oz * oz - .32 * .32, D = b * b - 4 * a * c; if (D < 0 || a < 1e-9) continue;
@@ -6528,7 +6549,7 @@ function majPNJ(dt, A) {
     if (n.anim1) { clip = n.anim1; if (n.ch.player.done) { n.anim1 = null; } }
     if (clip !== n.anim || n.anim1Nouveau) { n.ch.play(clip, { rate, fade: .22, restart: !!n.anim1Nouveau }); n.anim = clip; n.anim1Nouveau = false; } else n.ch.player.rate = rate;
     n.couche = clip === 'Death' || clip === 'Lie_Back';
-    n.ch.pos[0] = n.x; n.ch.pos[1] = n.yOff !== undefined ? n.yOff : (n.x > 104 && W.solH ? W.solH(n.x, n.z) : 0); n.ch.pos[2] = n.z; n.ch.yaw = n.yaw;
+    n.ch.pos[0] = n.x; n.ch.pos[1] = n.yOff !== undefined ? n.yOff : (n.x > 104 && W.solH ? W.solH(n.x, n.z) : n.lg || n.z > 200 ? 0 : hSol(n.x, n.z)); n.ch.pos[2] = n.z; n.ch.yaw = n.yaw;
     // visibilité (budget GPU : distance et champ de vision)
     const dE = Math.hypot(n.x - CAM.x, n.z - CAM.z); n.dE = dE; n.vis = dE < (self.__devWall ? 170 : DIST_VIS) && (dE < 3 || !JOE.fr || M3.sphereVisible(JOE.fr, n.x, .95, n.z, 1.3));
     n.ch.extraProps = n.props; if (n.menotte && !n.couche && (n.vis || n.dE < 30)) poseMainsDos(n.ch, dt); else if (n.vis) n.ch.update(dt); else n.ch.tick(dt); } }
@@ -6724,7 +6745,7 @@ function groupeHall(A, H, nb, type) { if (!H) return null; const G = { id: 'G' +
 function pointDeDeal(A, H, id, k) { if (!H) return; const G = groupeHall(A, H, 2, 'deal'); const p = H.P(0, H.d * .5);
   const pd = navProche(p[0], p[1]); let px = pd[0], pz = pd[1]; for (const m of G.membres) if (Math.hypot(m.x - px, m.z - pz) < 1) { px += 1.1; } const d = creerPNJ(A, { role: 'dealer', x: px, z: pz, perso: { coop: rnd(.1, .4), hostile: rnd(.3, .7), nerf: rnd(.4, .8) } }); d.groupe = G; d.hall = H; d.indices = new Set(['hall']); profilJeune(d, true); d.obj.resine = rndi(3, 12); d.obj.coke = chance(.4) ? rndi(1, 5) : 0; d.clipFixe = 'Idle_LookAround'; G.membres.push(d); G.dealer = d;
   G.planque = { resine: rndi(40, 160) * k | 0, coke: chance(.5) ? rndi(5, 25) : 0, cash: rndi(200, 1500), trouvee: false, lieu: pick(['boîte aux lettres arrachée', 'gaine technique', 'faux plafond']) };
-  G.prochainClient = HEURE + rnd(.1, .3);
+  G.prochainClient = (HEURE + rnd(.1, .3)) % 24;
   for (const s of W.SPOTS.guet) if (s[2] === id || (id === 'B' && chance(.5) && s[2] !== 'C') || (id === 'C2' && s[2] === 'C')) { const g = creerPNJ(A, { role: 'guetteur', x: s[0], z: s[1], ageMin: 15, ageMax: 19, perso: { coop: .4, hostile: .4, nerf: .6 } }); g.groupe = G; g.guet = true; g.clipFixe = chance(.5) ? 'Phone_Talk' : 'Idle_LookAround'; g.indices = new Set(); profilJeune(g); g.obj.cash = rndi(20, 60); G.membres.push(g); g.ancre = [s[0], s[1]]; } }
 
 // ---------------------------------------------------------------- IA des habitants et des jeunes (lente : 3 fois par seconde)
@@ -6758,8 +6779,8 @@ function alerterGroupe(G, guetteur) { if (G.alerte > 0) return; G.alerte = 1; G.
   if (!G._msg) { G._msg = 1; indice('Le guetteur vous a repérés : le point de deal est alerté.'); setTimeout(() => dire(PART, pick(['Grillés. Le chouf nous a vus.', 'C’est mort, ils ont crié. La prochaine fois on arrive par l’autre côté, sans brassard.'])), 1500); }
   for (const m of G.membres) { if (m.etat !== 'libre') continue; if (m === G.dealer) { if (m.obj.resine > 0 && G.planque) { G.planque.resine += m.obj.resine; m.obj.resine = 0; } if (chance(.55)) { fuir(m); continue; } }
     if (m.obj.cannabis > 5 && chance(.4)) fuir(m); } }
-function majDeals(A) { for (const G of GROUPES) { if (G.type !== 'deal' || !G.dealer || G.dealer.cache) continue; if (G.alerte > 0 && HEURE - G.alerteT > .4) { G.alerte = 0; } if (G.alerte > 0) continue;
-    if (HEURE >= G.prochainClient && !G.client) { G.prochainClient = HEURE + rnd(.15, .4); const e = pick(W.SPOTS.entrees), c = creerPNJ(A, { role: 'client', x: e[0], z: e[1], ageMin: 18, ageMax: 45 }); c.obj.cash = rndi(20, 80); c.indices = new Set(); G.client = c;
+function majDeals(A) { for (const G of GROUPES) { if (G.type !== 'deal' || !G.dealer || G.dealer.cache) continue; if (G.alerte > 0 && ecartH(G.alerteT) > .4) { G.alerte = 0; } if (G.alerte > 0) continue;
+    if (passeH(G.prochainClient) && !G.client) { G.prochainClient = (HEURE + rnd(.15, .4)) % 24; const e = pick(W.SPOTS.entrees), c = creerPNJ(A, { role: 'client', x: e[0], z: e[1], ageMin: 18, ageMax: 45 }); c.obj.cash = rndi(20, 80); c.indices = new Set(); G.client = c;
       const H = G.hall; allerVers(c, H.P(0, 1.2)[0], H.P(0, 1.2)[1], { v: 1.5, fin: () => { c.regard = [G.dealer.x, G.dealer.z]; G.dealer.regard = [c.x, c.z]; setTimeout(() => { if (c.cache || G.dealer.cache || c.etat !== 'libre' || G.dealer.etat !== 'libre') return; jouer(c, 'Give_Item'); jouer(G.dealer, 'Give_Item'); c.obj.resine++; c.obj.cash -= 20; G.dealer.obj.cash += 20;
         // le joueur assiste-t-il à la transaction ?
         const d = Math.hypot(CAM.x - c.x, CAM.z - c.z), pv = (20 + S.comp.observation * 5) * (J.nv ? 1.7 : 1); if (d < pv && segLibre(CAM.x, CAM.z, c.x, c.z) && voitJoueurInverse(c)) { c.indices.add('vu_deal'); G.dealer.indices.add('vu_deal'); c.flagrant = 'achat'; G.dealer.flagrant = 'vente'; toast('Flagrant délit constaté : transaction', 'gold'); radio('Observation', 'Échange vu dans le ' + G.hall.nom + ' : ' + desc(c) + ' achète au ' + desc(G.dealer) + '. Flagrance établie.', 'ok'); gain(10, 1); }
@@ -6818,7 +6839,7 @@ PROC.explosionGMD = p => { const enc = encercle(); let touches = 0; for (const n
 PROC.gmdLancee = () => { dire(PART, 'Grenade !', { prio: true }); };
 PROC.coupDeFeu = (o, lbd) => { for (const n of NPCS) { if (n.cache || n.estCollegue || n.role === 'renfort') continue; if (n.dE < 40 && !lbd && (n.etat === 'libre' || n.etat === 'controle')) { if (n.role === 'resident' || n.role === 'client') fuir(n); else if (chance(.5)) fuir(n); } } tensionQuartier(lbd ? 1 : 3); };
 PROC.coupDeFeuEnnemi = n => { n.menace = 5; J.stress = Math.min(1, J.stress + .4); if (!n._tirMsg) { n._tirMsg = 1; dire(PART, 'Il tire ! À couvert ! Il est armé !', { prio: true }); radio('TN 75', 'Coups de feu contre les effectifs ! Tous les équipages disponibles convergent.', 'ko'); } };
-PROC.joueurKO = (type, src) => { J.ko = true; S.stats.blessures++; voixStop(); UI.fermerDlg(); radio('TN 75', 'Policier blessé en intervention ! SAMU en route.', 'ko'); setTimeout(() => UI.blesse(type), 1800); };
+PROC.joueurKO = (type, src) => { J.ko = true; J.koT = now(); J.koType = type; S.stats.blessures++; voixStop(); UI.fermerDlg(); radio('TN 75', 'Policier blessé en intervention ! SAMU en route.', 'ko'); setTimeout(() => UI.blesse(type), 1800); };
 
 // ---------------------------------------------------------------- injonction (R1 / G)
 PROC.injonction = () => { if (now() - J.injT < 1200) return; J.injT = now(); const cible = cibleDevant(14, .5); if (J.brassard) declarerPolice(cible);
@@ -6899,6 +6920,9 @@ function choisirCadre(n) { direJoueur('Police nationale, bonsoir. Contrôle d’
 function cadreValide(n, cadre) { if (cadre === '78-2-1') { const i = n.indices || new Set(); const hallOk = i.has('hall') && n.groupe && n.groupe.membres.filter(m => !m.cache && m.etat !== 'fuite' && m.etat !== 'embarque').length >= 2; return hallOk || i.has('odeur') || i.has('vu_deal') || i.has('arme') || i.has('signalement') || i.has('vu_violence') || i.has('vol') || i.has('outrage') || i.has('rebellion') || !!n.flagrant; }
   if (cadre === '78-2-7') return !!(S.requis && S.requis.actif && heureDans(S.requis.de, S.requis.a) && Math.abs(CAM.x) < 100);
   if (cadre === '78-2-8') return EVTS.some(e => !e.fini && Math.hypot(e.x - n.x, e.z - n.z) < 40) || S.tension > 80 || (n.groupe && n.groupe.tension > 75); return false; }
+// écart (en heures, 0–24) écoulé depuis t0 sur l'horloge de jeu qui reboucle à minuit ; passeH : l'heure t est-elle atteinte (dans les 12 h écoulées)
+function ecartH(t0) { return ((HEURE - t0) % 24 + 24) % 24; }
+function passeH(t) { return ecartH(t) < 12; }
 function heureDans(a, b) { const h = HEURE; return a < b ? h >= a && h < b : h >= a || h < b; }
 function ouvrirControle(n, force, cadre) { const c = { n, cadre: cadre || (force ? '78-2-1' : null), t0: HEURE, presente: presentationOk(n), vouvoie: true, palpe: false, fouille: false, fouilleIllegale: false, fichier: null, idEtablie: false, idDeclaree: null, infractions: new Set(), afd: [], menotte: false, droits: false, opj: false, gav: false, nullite: false, abus: false, xp: 0, fautes: [] };
   const p = n._ctl; if (p && p !== c && p.n === n) { for (const k of p.infractions) c.infractions.add(k); if (p.fichierFPR) c.fichierFPR = true; if (p.fichier) c.fichier = p.fichier; if (p.idDeclaree) { c.idDeclaree = p.idDeclaree; c.idEtablie = p.idEtablie; } c.palpe = p.palpe; c.fouille = p.fouille; c.saisieArme = p.saisieArme; c.afd = p.afd; if (p.interpelle) c.infractions.add('rebellion'); c.repris = true; }   // v18 : un fuyard rattrapé garde ses infractions (port d'arme, etc.) → l'OPJ décide bien la GAV
@@ -7183,11 +7207,19 @@ function lancerEvenement(A, type) { const h = HEURE, nuitP = h >= 21 || h < 5;
   else if (type === 'malaise') { const p = pick(W.SPOTS.passages); e.x = p[0]; e.z = p[1]; e.titre = 'Personne en malaise'; e.annonce = 'personne inconsciente au sol, secteur ' + lieuNom(p) + '.'; e.objectif = 'Malaise — portez secours (✕) et demandez le SAMU (radio).'; e.xp = 15; MALAISE = creerPNJ(A, { role: 'victime', x: p[0], z: p[1], ancien: true, ageMin: 65, ageMax: 85 }); MALAISE.etat = 'blesse'; MALAISE.malaise = true; MALAISE.ev = e; }
   else if (type === 'tirs') { const H = pick(W.HALLS); e.x = H.dehors[0]; e.z = H.dehors[1]; e.titre = 'Coups de feu'; e.annonce = 'coups de feu entendus, secteur ' + H.nom + '. Individu armé. Prudence extrême.'; e.objectif = 'Tirs — progressez à couvert ; sommation ; tir seulement en absolue nécessité (L435-1).'; e.xp = 120; e.mer = 20; creerTireur(A, e, H); }
   EVTS.push(e); evtRadio(e); }
+let evtSuivT = 0;
+function majEvenements(dt) { evtSuivT -= dt; if (evtSuivT > 0) return; evtSuivT = 1;
+  for (const e of EVTS) { if (e.fini) continue; const age = ecartH(e.t0);
+    if (e.type === 'malaise' && !NPCS.some(n => n.ev === e && n.malaise && !n.cache)) { e.fini = true; objectif(''); continue; }   // victime prise en charge (SAMU) : la récompense a déjà été donnée
+    if (e.type === 'signalement' && e.cible) { const n = e.cible; if (n.menotte || n.etat === 'embarque') { finEvt(e, true); continue; } if (n.cache) { finEvt(e, false); continue; } }
+    if (e.type === 'vol' && e.sacRecupere && age > 1.5) { finEvt(e, true); }
+    else if (age > 2 && e.type !== 'conflit' && e.type !== 'otage') finEvt(e, false);
+    if (e.fini) for (const n of NPCS.slice()) if ((n.ev === e || n === e.cible) && !n.cache && n.dE > 30 && n.etat !== 'menotte' && n.etat !== 'escorte' && n !== PROC.ctl?.n) { if (n === MALAISE) MALAISE = null; retirerPNJ(n); } } }
 function lieuNom(p) { const H = hallProche(p[0], p[1], 25); if (H) return H.nom; if (p[1] > 45) return 'commerces, avenue Jean-Jaurès'; if (p[0] > 58 && p[1] < 8) return 'city stade'; if (p[0] < -50 && p[1] > 10) return 'aire de jeux'; return 'parking central'; }
 function creerRixe(A, e) { const R = { x: e.x, z: e.z, e, m: [], actif: true }; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, n = creerPNJ(A, { role: 'jeune', x: e.x + Math.cos(a) * rnd(1, 2.5), z: e.z + Math.sin(a) * rnd(1, 2.5) }); profilJeune(n); n.indices = new Set(['vu_violence']); n.rixe = R; n.clipFixe = 'Combat_Idle'; n.perso.hostile = rnd(.4, .8); R.m.push(n); } RIXES.push(R); }
 function arreterRixe(R) { if (!R.actif) return; R.actif = false; let restes = 0; for (const n of R.m) { n.clipFixe = null; if (chance(.6)) fuir(n); else { n.etat = 'mains'; n.etatT = 30; restes++; arreter(n); } } radio('Rixe', 'La rixe cesse à votre injonction. ' + (restes ? restes + ' individus restent sur place : interpellez les auteurs.' : 'Tous s’enfuient.'), 'ok');
   const chk = setInterval(() => { if (R.e.fini) { clearInterval(chk); return; } if (R.m.some(n => n.etat === 'embarque' || n.menotte)) { clearInterval(chk); finEvt(R.e, true); } }, 1000); }
-function majRixes(dt) { for (const R of RIXES) { if (!R.actif) continue; if (HEURE - R.e.t0 > 1.2) { R.actif = false; finEvt(R.e, false); for (const n of R.m) { n.clipFixe = null; if (!n.cache && n.etat === 'libre') fuir(n); } continue; }
+function majRixes(dt) { for (const R of RIXES) { if (!R.actif) continue; if (ecartH(R.e.t0) > 1.2) { R.actif = false; finEvt(R.e, false); for (const n of R.m) { n.clipFixe = null; if (!n.cache && n.etat === 'libre') fuir(n); } continue; }
     if (Math.hypot(R.x - CAM.x, R.z - CAM.z) < 9 && J.brassard && chance(dt * .3)) arreterRixe(R);
     for (const n of R.m) { if (n.etat !== 'libre' || n.cache) continue; const o = R.m[(R.m.indexOf(n) + 3) % R.m.length]; n.regard = [o.x, o.z]; if (chance(dt * .8)) jouer(n, pick(['Punch_Jab', 'Punch_Cross', 'Kick', 'Taunt'])); if (chance(dt * .1)) SON.fx.cri([n.x, 1.6, n.z]); } } }
 function creerVol(A, e) { const v = creerPNJ(A, { role: 'victime', x: e.x, z: e.z, sexe: 'f', ancien: true, ageMin: 66, ageMax: 82 }); v.ev = e; v.etat = 'libre'; dire(v, 'Au voleur ! Au voleur ! Mon sac !', { loin: true });
@@ -7196,7 +7228,7 @@ function creerVol(A, e) { const v = creerPNJ(A, { role: 'victime', x: e.x, z: e.
 function parlerVictime(n) { const e = n.ev; if (n.malaise) { secourir(n); return; } if (e && e.sacRecupere && !e.rendu) { e.rendu = true; dire(n, 'Oh merci, merci mon petit ! Tout était dedans !'); finEvt(e, true); S.stats.aides++; S.reputation = clamp(S.reputation + 3, 0, 100); setTimeout(() => { const p = pick(W.SPOTS.passages); allerVers(n, p[0], p[1], { v: .8, fin: () => retirerPNJ(n) }); }, 4000); UI.fermerDlg(); return; }
   dire(n, 'Il est parti par là ! Un jeune, ' + (e && e.cible ? nomCouleur(e.cible.ch.def.colors.top) : 'en noir') + ' !'); UI.fermerDlg(); }
 function creerMortiers(A, e) { const R = []; const base = navProche(e.x + rnd(-6, 6), e.z + rnd(-12, -6)); for (let i = 0; i < rndi(3, 4); i++) { const n = creerPNJ(A, { role: 'jeune', x: base[0] + rnd(-3, 3), z: base[1] + rnd(-3, 3), ageMin: 15, ageMax: 21 }); profilJeune(n); n.indices = new Set(['vu_violence']); n.etat = 'agressif'; n.menace = 3; n.arme = chance(.6) ? 'mortier' : 'jet'; n.perso.hostile = .8; R.push(n); }
-  e.membres = R; const chk = setInterval(() => { if (e.fini) { clearInterval(chk); return; } const actifs = R.filter(n => !n.cache && n.etat === 'agressif'); if (!actifs.length) { clearInterval(chk); finEvt(e, R.some(n => n.menotte || n.etat === 'embarque' || n.etat === 'sol' || n.etat === 'mains')); } else if (HEURE - e.t0 > 1.4) { clearInterval(chk); for (const n of actifs) { n.etat = 'libre'; fuir(n); } finEvt(e, false); } }, 1000); }
+  e.membres = R; const chk = setInterval(() => { if (e.fini) { clearInterval(chk); return; } const actifs = R.filter(n => !n.cache && n.etat === 'agressif'); if (!actifs.length) { clearInterval(chk); finEvt(e, R.some(n => n.menotte || n.etat === 'embarque' || n.etat === 'sol' || n.etat === 'mains')); } else if (ecartH(e.t0) > 1.4) { clearInterval(chk); for (const n of actifs) { n.etat = 'libre'; fuir(n); } finEvt(e, false); } }, 1000); }
 function creerForcene(A, e) { const n = creerPNJ(A, { role: 'forcene', x: e.x, z: e.z, perso: { coop: .3, hostile: .6, nerf: .9 }, ageMin: 25, ageMax: 45 }); n.indices = new Set(['arme']); n.etat = 'agressif'; n.arme = 'couteau'; n.menace = 4; n.props = [{ prop: 'Knife', socket: 'Socket_Hand_R', q: [0, 0, 0, 1], t: [0, 0, 0] }]; n.ev = e; n.fixeForcene = true; n.dangereux = true; e.cible = n; n.combat = true;
   const chk = setInterval(() => { if (e.fini) { clearInterval(chk); return; } if (n.menotte || n.etat === 'embarque') { clearInterval(chk); finEvt(e, true); } else if (n.blesse) { clearInterval(chk); e.fini = true; radio('IGPN', 'Usage de l’arme sur le forcené : enquête administrative de routine.', ''); } }, 1000); }
 function negocier(n) { const k = .25 + S.comp.nego * .1 + (n.somme || 0) * .06; arreter(n);
@@ -7210,7 +7242,7 @@ function majForcenes(dt) { for (const n of NPCS) { if (n.cache) continue;
     if (n.role === 'forcene' && n.etat === 'agressif') { if (n.fixeForcene && n.dE > 3.6) { arreter(n); regarderJoueur(n); n.combat = true; if (chance(dt * .3)) dire(n, pick(['Reculez !', 'Approchez pas !', 'Laissez-moi !'])); } else n.fixeForcene = false; n.menace = n.dE < 4 ? 5 : 4; }
     if (n.tireur && n.etat === 'libre' && n.dE < 30 && voitJoueur(n, 30)) { if (n.somme && chance(.3 + S.comp.nego * .04) && !n._decide) { n._decide = true; if (chance(.5)) { n.arme = null; n.props = []; n.etat = 'mains'; n.menace = 1; n.etatT = 40; dire(n, 'OK ! Je pose l’arme ! Tirez pas !'); gain(80, 10, 'Individu armé désarmé sans tir'); } else fuir(n); } else if (!n._decide && n.dE < 22) { n.etat = 'agressif'; n.menace = 5; n.atkT = 1.2; } } } }
 function majFeux(dt, A) { for (const f of FEUX) { if (f.eteint) continue; if (Math.random() < dt * 9) A.fx.fire([f.x, .8, f.z], .9); if (Math.random() < dt * .6) SON.fx.feu();
-    if (f.e && !f.e.fini && HEURE - f.e.t0 > 1.2) { f.eteint = true; finEvt(f.e, false); } } }
+    if (f.e && !f.e.fini && ecartH(f.e.t0) > 1.2) { f.eteint = true; finEvt(f.e, false); } } }
 function menuFeu(f) { UI.dialogue({ nom: 'Conteneur en feu', role: 'risque de propagation', etat: [], texte: 'Les flammes montent à deux mètres. Des badauds approchent.', choix: [{ t: 'Établir un périmètre de sécurité, éloigner les badauds', cls: 'g', f: () => { f.secu = true; UI.fermerDlg(); toast('Périmètre établi'); gain(6, 0); } }, { t: 'Demander les sapeurs-pompiers (radio)', f: () => { UI.fermerDlg(); demanderPompiers(); } }, { t: 'Fermer', f: () => UI.fermerDlg() }] }); }
 
 // ---------------------------------------------------------------- boucle des procédures
@@ -7218,7 +7250,7 @@ function majProc(dt, A) {
   // heure de jeu : 1 s réelle = 12 s de jeu
   const jm = +OPT.journee, vh = jm > 0 ? 24 / (jm * 60) : 0; const h0 = HEURE; HEURE = (HEURE + dt * vh) % 24; S.heure = HEURE; S.stats.minutes += dt * vh * 60;   // cycle jour/nuit réglable (1 h réelle par défaut)
   if (Math.floor(h0) !== Math.floor(HEURE)) nouvelleHeure(A);
-  majIA(dt, A); majAttitudes(dt); majPlacementControle(dt); majPointage(dt); majBalises(dt, A); majMissions(dt); majApproches(dt); majRixes(dt); majForcenes(dt); majFeux(dt, A); majProjectiles(dt, A); majGrenades(dt, A); majCollegue(dt);
+  majIA(dt, A); majAttitudes(dt); majPlacementControle(dt); majPointage(dt); majBalises(dt, A); majMissions(dt); majApproches(dt); majRixes(dt); majForcenes(dt); majFeux(dt, A); majEvenements(dt); majProjectiles(dt, A); if (J.ko && $('ecran').hidden && now() - (J.koT || 0) > 4000) { J.koT = now(); UI.blesse(J.koType || 'coups'); } majGrenades(dt, A); majCollegue(dt);
   // contrôle en cours : la personne reste sur place, s'éloigner l'annule
   const c = PROC.ctl; if (c && c.n && !c.n.cache) { const n = c.n; if (n.etat === 'controle' || n.etat === 'mains' || n.etat === 'menotte') { if (!n.chem) n.regard = [CAM.x, CAM.z]; if (n.dE > 14 && !c.interpelle && PROC.escorte !== n) { radio('Procédure', 'Contrôle abandonné : la personne repart.', ''); n.etat = 'libre'; PROC.ctl = null; } } }
   // malaise : pas de mouvement
@@ -7232,7 +7264,7 @@ function nouvelleHeure(A) { const h = Math.floor(HEURE); // la population change
   if (h === 18 || h === 21 || h === 6 || h === 14) repeupler(A);
   if (h === 20) { S.requis = { actif: chance(.55), de: 20, a: 2 }; if (S.requis.actif) radio('Commissariat', 'Réquisitions écrites du procureur (art. 78-2 al. 7) : contrôles d’identité autorisés sur la cité Marcel Pagnol de 20 h à 2 h.', 'ok'); }
   if (h === 5) radio('Commissariat', 'Fin de la vacation de nuit à 5 h : rejoignez le véhicule pour le débrief, ou continuez (mode libre).', ''); }
-function repeupler(A) { const garder = new Set([PART, PROC.ctl && PROC.ctl.n, PROC.escorte, PROC.poursuite, MALAISE].filter(Boolean)); for (const n of NPCS.slice()) if (!garder.has(n) && !n.ev && n.role !== 'renfort' && n.dE > 25) retirerPNJ(n); GROUPES.length = 0; peupler(A); }
+function repeupler(A) { const garder = new Set([PART, PROC.ctl && PROC.ctl.n, PROC.escorte, PROC.poursuite, MALAISE, ...EVTS.filter(e => !e.fini).map(e => e.cible)].filter(Boolean)); for (const n of NPCS.slice()) if (!garder.has(n) && !n.ev && n.role !== 'renfort' && n.dE > 25) retirerPNJ(n); GROUPES.length = 0; peupler(A); }
 
 // =====================================================================================
 //  5 bis · MISSIONS PERSISTANTES (marqueurs à l'écran et sur la boussole, sauvegardées)
@@ -7276,8 +7308,8 @@ const MQ = []; let mqT = 0;
 function majMarqueurs(dt) { const box = $('marqs'); if (!S || UI.titre) { box.innerHTML = ''; return; } mqT -= dt; const L = ciblesMarqueurs();
   while (MQ.length < L.length) { const d = document.createElement('div'); d.className = 'marq'; d.innerHTML = '<span></span><i></i><b></b>'; box.appendChild(d); MQ.push(d); } while (MQ.length > L.length) MQ.pop().remove();
   const w = innerWidth, h = innerHeight; L.forEach((q, i) => { const d = MQ[i], dist = Math.hypot(q.x - CAM.x, q.z - CAM.z); let p = APP.project([q.x, 2.9, q.z]), bord = false; const dx = q.x - CAM.x, dz = q.z - CAM.z, devant = -Math.sin(CAM.a) * dx - Math.cos(CAM.a) * dz > 0;
-    if (!p || !devant) { const rel = angDiff(Math.atan2(-dx, -dz), CAM.a); p = [rel > 0 ? 30 : w - 30, h * .45]; bord = true; } const mg = 70; if (bord) p[0] = p[0] < w / 2 ? mg : w - mg; p[0] = clamp(p[0], mg, w - mg); p[1] = clamp(p[1], 120, h - 140); if (p[0] <= mg || p[0] >= w - mg) bord = true;
-    d.className = 'marq' + (q.evt ? ' evt' : '') + (bord ? ' bord ' + (p[0] < w / 2 ? 'g' : 'd') : '') + (dist < 10 ? ' pres' : ''); d.style.transform = 'translate(' + Math.round(p[0]) + 'px,' + Math.round(p[1]) + 'px) translate(-50%,-100%)'; if (mqT <= 0) { d.firstChild.textContent = dist < 7 && !q.evt ? (q.sous || q.t) : q.t; d.lastChild.textContent = Math.round(dist) + ' m'; } });
+    if (!p || !devant) { const rel = angDiff(Math.atan2(-dx, -dz), CAM.a); p = [rel > 0 ? 30 : w - 30, h * .45]; bord = true; } const mg = Math.max(70, (d._lw || 0) / 2 + 22); if (bord) p[0] = p[0] < w / 2 ? mg : w - mg; p[0] = clamp(p[0], mg, w - mg); p[1] = clamp(p[1], 120, h - 140); if (p[0] <= mg + .5 || p[0] >= w - mg - .5) bord = true;
+    d.className = 'marq' + (q.evt ? ' evt' : '') + (bord ? ' bord ' + (p[0] < w / 2 ? 'g' : 'd') : '') + (dist < 10 ? ' pres' : ''); d.style.transform = 'translate(' + Math.round(p[0]) + 'px,' + Math.round(p[1]) + 'px) translate(-50%,-100%)'; if (mqT <= 0) { const tx = dist < 7 && !q.evt ? (q.sous || q.t) : q.t; if (d.firstChild.textContent !== tx) { d.firstChild.textContent = tx; d._lw = d.firstChild.offsetWidth; } d.lastChild.textContent = Math.round(dist) + ' m'; } });
   if (mqT <= 0) mqT = .25; }
 function ecranMissions() { initMissions(); UI.ecran('<h2>Missions</h2><p class="note">Les missions restent actives d’une session à l’autre. Choisissez celle à suivre : son marqueur apparaît à l’écran et sur la boussole.</p><div class="cartes">' +
     MISSIONS.map(m => { const E = S.missions[m.id] || {}, verrou = m.req && !m.req(), st = verrou ? -2 : etapeMission(m); return '<div class="carte ' + (S.suivie === m.id ? 'on' : '') + '"><b>' + m.n + '</b><p>' + m.d + '</p>' + m.etapes.map((e, i) => '<p style="color:' + (e.ok() ? 'var(--green)' : i === st ? 'var(--ink)' : 'var(--dim)') + '">' + (e.ok() ? '✔ ' : i === st ? '▸ ' : '· ') + e.t + '</p>').join('') + '<p style="color:var(--amber)">' + m.xp + ' XP · ' + m.mer + ' ★</p><button data-m="' + m.id + '" ' + (E.fini || verrou ? 'disabled' : '') + '>' + (E.fini ? 'Accomplie' : verrou ? 'Verrouillée' : S.suivie === m.id ? 'Suivie' : 'Suivre') + '</button></div>'; }).join('') + '</div><button class="mbtn" id="miK">Retour</button>', P => {
@@ -7488,6 +7520,11 @@ function entrer(force) { UI.fermerDlg(); const V = APP_ETAT.V, lg = APP_ETAT.lg;
 function fuirLogement(n) { if (n.etat === 'menotte' || n.cache) return; const V = APP_ETAT.V; if (!V) return; n.etat = 'fuite'; n.immobile = false; n.clipFixe = null; dire(n, pick(['Lâchez-moi !', 'Vous m’aurez pas !']), { loin: true });
   allerVers(n, V.pts.fenetre[0], V.pts.fenetre[1], { v: 4.2, fin: () => { if (n.etat !== 'fuite') return; const lg = n.lg; if (lg && lg.etage <= 1 && chance(.6)) { radio('Fuite', n.prenom + ' a sauté par la fenêtre du 1er étage. Il s’enfuit dans la cité.', 'ko'); const H = lg.H; n.x = H.dehors[0]; n.z = H.dehors[1]; n.lg = null; const i = APP_ETAT.pnj.indexOf(n); if (i >= 0) APP_ETAT.pnj.splice(i, 1); n.etat = 'libre'; fuir(n); }
     else { n.etat = 'mains'; n.etatT = 60; n.clipFixe = null; dire(n, 'C’est bon ! C’est bon ! Je me rends !'); toast('Coincé sur le balcon, il se rend.', 'gold'); } } }); }
+function injonctionPorte(lg, e) { UI.fermerDlg(); direJoueur('Police ! Ouvrez la porte !', true); SON.fx.porte ? SON.fx.porte() : SON.fx.clic(); const a = e.cible;
+  setTimeout(() => { if (e.fini || !APP_ETAT.V || APP_ETAT.lg !== lg) return; const V = APP_ETAT.V;
+    if (a && !a.cache && e.type === 'conflit' && chance(.42 + S.comp.nego * .06 - (e.injP || 0) * .15)) { dire(a, pick(['C’est bon, c’est bon… j’ouvre.', 'Ça va, ça va ! J’arrive…']), { loin: true }); a.etat = 'mains'; a.etatT = 30; a.clipFixe = null; V.porte.cible = 1; toast('La porte s’ouvre. Entrez et mettez la victime à l’abri.', 'gold'); setTimeout(() => { if (!e.fini && APP_ETAT.V && !APP_ETAT.dedans && !DLG.o) menuPorte(); }, 1200); }
+    else { e.injP = (e.injP || 0) + 1; if (a && !a.cache) dire(a, pick(['Dégagez ! C’est chez moi, ici !', 'Partez ! Ça vous regarde pas !']), { loin: true }); if (e.victime && !e.victime.cache) setTimeout(() => dire(e.victime, pick(['Aidez-moi !', 'Au secours ! Il va me tuer !']), { loin: true }), 900);
+      toast('Personne n’ouvre. Danger immédiat : vous pouvez forcer la porte (art. 53 CPP).', 'red'); setTimeout(() => { if (!e.fini && APP_ETAT.V && !APP_ETAT.dedans && !DLG.o) menuPorte(); }, 1900); } }, 1400); }
 function negocierPorte(lg, e) { UI.fermerDlg(); direJoueur('Monsieur, police. Je m’appelle ' + S.joueur.prenom + '. Parlons. Personne ne doit être blessé.', false, true); const a = e.cible, k = .32 + S.comp.nego * .08 + (e.nego || 0) * .12;
   setTimeout(() => { if (!a || a.cache) return; if (chance(k)) { e.nego = (e.nego || 0) + 1; if (e.nego >= 2) { dire(a, 'D’accord… d’accord. J’ouvre. Je pose le couteau.'); a.arme = null; a.props = []; a.etat = 'mains'; a.etatT = 60; a.fixeForcene = false; if (e.victime) { e.victime.clipFixe = 'Crouch_Idle'; e.victime.otage = false; } APP_ETAT.V.porte.cible = 1; gain(60, 10, 'Prise d’otage dénouée par la négociation'); S.stats.desesc++; toast('Il ouvre et se rend. Interpellez-le.', 'gold'); }
       else { dire(a, pick(['Vous voulez quoi ? Vous allez m’enfermer…', 'Elle m’a quitté… elle voulait partir avec les enfants…'])); setTimeout(() => menuPorte(), 1800); } }
@@ -7557,7 +7594,7 @@ function evtDomicile(e) { const lg = choisirLogementEvt(e.type); if (!lg) return
   else { e.titre = 'Prise d’otage'; e.annonce = 'forcené retranché avec sa compagne, armé d’un couteau, ' + adresseLog(lg) + '. Prudence.'; e.objectif = 'Prise d’otage — ' + lg.H.nom + ', ' + etagesTxt(lg.etage) + ' : négociez à travers la porte, demandez la BRI ou intervenez.'; e.xp = 120; e.mer = 18; }
   const chk = setInterval(() => { if (e.fini) { clearInterval(chk); return; } const a = e.cible;
     if (a && (a.menotte || a.etat === 'embarque')) { clearInterval(chk); if (e.victime && !e.victime.cache) { e.victime.clipFixe = 'Idle'; e.victime.otage = false; } finEvt(e, true); if (e.type === 'conflit') { S.stats.violencesConj = (S.stats.violencesConj || 0) + 1; radio('OPJ', 'Auteur placé en garde à vue pour violences conjugales. Pensez à orienter la victime (plainte, 3919).', 'ok'); } }
-    else if (HEURE - e.t0 > (e.type === 'otage' ? 2.2 : 1.3) && !APP_ETAT.dedans && !e.bri) { clearInterval(chk); if (e.victime) e.otageBlesse = true; finEvt(e, false); lg.ev = null; } }, 1000);
+    else if (ecartH(e.t0) > (e.type === 'otage' ? 2.2 : 1.3) && !APP_ETAT.dedans && !e.bri) { clearInterval(chk); if (e.victime) e.otageBlesse = true; finEvt(e, false); lg.ev = null; } }, 1000);
   return true; }
 function genererMandats() { S.q.mandats = S.q.mandats || []; while (S.q.mandats.filter(m => !m.fait).length < 3 && LOGEMENTS.length) { const lg = pick(LOGEMENTS.filter(l => (l.type === 'famille' || l.type === 'monoparentale') && !l.mandat && !S.q.mandats.some(m => m.lg === l.id)));
     if (!lg) break; const R = aleaGraine(lg.id + 'm' + S.q.mandats.length); const age = 19 + Math.floor(R() * 12), m = { lg: lg.id, nom: lg.nom, prenom: PRENOMS_H[Math.floor(R() * PRENOMS_H.length)], age, motif: pick(['mandat d’amener (vol avec violence)', 'mandat d’amener (trafic de stupéfiants)', 'mandat d’arrêt (évasion d’un aménagement de peine)', 'mandat d’amener (violences aggravées)']), reaction: pick(['rend', 'cache', 'fuite', 'rend']), fait: false }; S.q.mandats.push(m); }
@@ -7596,7 +7633,7 @@ function majLogements(dt) { const V = APP_ETAT.V;
     if (type === 'conflit' || type === 'otage') { const e = { type, t0: HEURE, fini: false, x: 0, z: 0 }; if (!evtDomicile(e)) return _le(A); EVTS.push(e); if (chance(.55) && !(self.__TEST_NORENDER && !self.__PASSANTS) && passantAlerte(e)) return; evtRadio(e); return; }
     const _er = evtRadio; let passant = false; if (!type || ['rixe', 'vol', 'malaise', 'feu', 'forcene', 'mortiers'].includes(type)) { if (chance(.4) && !(self.__TEST_NORENDER && !self.__PASSANTS)) { passant = true; evtRadio = e => { e.obj = e.objectif; }; } }
     try { _le(A, type); } finally { evtRadio = _er; } if (passant) { const e = EVTS[EVTS.length - 1]; if (e && !e.fini && !passantAlerte(e)) evtRadio(e); } }; }
-{ const _md = majDeals; majDeals = function (A) { _md(A); for (const G of GROUPES) { const c = G.client; if (c && !c.cache && !c.sortieMarquee && c.obj.resine > 0) { c.sortieMarquee = true; if (Math.hypot(c.x - CAM.x, c.z - CAM.z) < 40) c.indices.add('sortie_deal'); } if (G.type === 'deal' && G.prochainClient && G.prochainClient - HEURE > .3) G.prochainClient = HEURE + rnd(.08, .22); } }; }
+{ const _md = majDeals; majDeals = function (A) { _md(A); for (const G of GROUPES) { const c = G.client; if (c && !c.cache && !c.sortieMarquee && c.obj.resine > 0) { c.sortieMarquee = true; if (Math.hypot(c.x - CAM.x, c.z - CAM.z) < 40) c.indices.add('sortie_deal'); } if (G.type === 'deal' && G.prochainClient !== undefined && (24 - ecartH(G.prochainClient)) % 24 > .3 && !passeH(G.prochainClient)) G.prochainClient = (HEURE + rnd(.08, .22)) % 24; } }; }
 MISSIONS.push(
   { id: 'domicile', n: 'Interpellations à domicile', d: 'Trois mandats à exécuter dans la cité. Au domicile : uniquement entre 6 h et 21 h (art. 134 CPP). Montez par l’ascenseur du hall.', xp: 160, mer: 22,
     etapes: [0, 1, 2].map(i => ({ t: (() => { const m = S && S.q && S.q.mandats && S.q.mandats[i]; return m ? 'Interpeller ' + m.prenom + ' ' + m.nom + ' — ' + (logParId(m.lg) ? adresseLog(logParId(m.lg)) : '') : 'Mandat n° ' + (i + 1); }), ok: () => !!(S.q.mandats && S.q.mandats[i] && S.q.mandats[i].fait), ou: () => { const m = S.q.mandats && S.q.mandats[i], lg = m && logParId(m.lg); return lg ? liftPos(lg.H) : null; } })) },
@@ -7776,7 +7813,7 @@ let miniT = 0; function majMini(dt) { majCompas(); miniT -= dt; if (miniT > 0 ||
   for (const n of NPCS) { if (n.cache || n.estCollegue || n.dE > 70) continue; if (n.etat === 'fuite' || n.etat === 'agressif') M.push({ x: n.x, z: n.z, c: '#ff4b4b', r: 2 }); else if (n === (PROC.ctl && PROC.ctl.n) || n.etat === 'menotte' || n.etat === 'escorte') M.push({ x: n.x, z: n.z, c: '#ffb340', r: 1.8 }); else if (n.dE < 30 && segLibre(CAM.x, CAM.z, n.x, n.z)) M.push({ x: n.x, z: n.z, c: n.role === 'renfort' ? '#5aa0ff' : 'rgba(220,230,240,.7)', r: 1.2 }); }
   for (const e of EVTS) if (!e.fini) M.push({ x: e.x, z: e.z, c: '#ffb340', r: 2.5, anneau: true });
   const cv = $('mini'); dessinerCarte(cv, CAM.x, CAM.z, 55, CAM.a, { marques: M }); const g = cv.getContext('2d'), w = cv.width; g.save(); g.translate(w / 2, w / 2); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(0, -11); g.lineTo(7, 8); g.lineTo(0, 4); g.lineTo(-7, 8); g.closePath(); g.fill(); g.restore();
-  if (!$('carteGrande').hidden) { const c2 = $('carteG'); dessinerCarte(c2, 0, -2, 108, null, { marques: M.concat([{ x: CAM.x, z: CAM.z, c: '#fff', r: 3 }]), labels: true }); } }
+  if (!$('carteGrande').hidden) { const c2 = $('carteG'); dessinerCarte(c2, 9, -2, 118, null, { marques: M.concat([{ x: CAM.x, z: CAM.z, c: '#fff', r: 3 }]), labels: true }); } }
 
 // ---------------------------------------------------------------- dialogues
 const DLG = { o: null, sel: 0, n: null };
@@ -7827,7 +7864,7 @@ const UI = {
   fermerRadiale(choisir) { if (!UI.radiale) return; UI.radiale = false; $('roueR').hidden = true; document.body.classList.remove('ralenti'); if (choisir) { const x = UI.radItems[UI.radSel]; if (x) x.f(); } },
   fermerRoue(choisir) { if (!UI.roue) return; UI.roue = false; $('mL1').hidden = true; if (choisir) { const it = UI.items[UI.roueSel]; if (it) it.f(); } },
   // ---- écrans
-  ecran(html, init) { $('ecran').hidden = false; $('panel').innerHTML = html; document.body.classList.add('menu'); if (document.pointerLockElement) document.exitPointerLock(); UI.focus = 0; if (init) init($('panel')); UI.majFocus(); },
+  ecran(html, init) { UI.modal = /id="(rv1|sp1|bl1)"/.test(html); $('ecran').hidden = false; $('panel').innerHTML = html; document.body.classList.add('menu'); if (document.pointerLockElement) document.exitPointerLock(); UI.focus = 0; if (init) init($('panel')); UI.majFocus(); },
   fermerEcran() { $('ecran').hidden = true; document.body.classList.remove('menu'); },
   focusables: () => [...$('panel').querySelectorAll('button:not(:disabled),input,select')].filter(e => e.offsetParent !== null),
   majFocus() { const L = UI.focusables(); L.forEach((e, i) => e.classList.toggle('on', i === UI.focus)); const e = L[UI.focus]; if (e && GP.connecte) e.scrollIntoView({ block: 'nearest' }); },
@@ -7851,7 +7888,7 @@ function icone(k) { const P = { main: 'M8 20V9a2 2 0 014 0v6V5a2 2 0 014 0v10V7a
 // ---------------------------------------------------------------- écrans : titre, création, charger, pause
 function resumeSlot(i) { const s = SAVE.lire(i); if (!s) return null; return s; }
 function ecranTitre() { UI.titre = true; $('marqs').innerHTML = ''; MQ.length = 0; voixStop(); $('hud').hidden = true; $('tc').hidden = true; for (const k in VM.nodes) VM.nodes[k].visible = false; const d = SAVE.dernier();
-  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 18</p>' +
+  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 19</p>' +
     (d ? '<button class="mbtn prim" id="t1">Continuer<small>' + esc(SAVE.lire(d).joueur.prenom + ' ' + SAVE.lire(d).joueur.nom) + ' · ' + GRADES[gradeDe(SAVE.lire(d).xp)].n + '</small></button>' : '') +
     '<button class="mbtn ' + (d ? '' : 'prim') + '" id="t2">Nouvelle carrière</button><button class="mbtn" id="t3">Charger une partie</button><button class="mbtn" id="t4">Commandes</button><button class="mbtn" id="t5">Mémo : la procédure</button><button class="mbtn" id="t6">Options</button>' +
     '<p class="note" style="margin-top:14px">Jeu de simulation. Personnages, lieux et faits sont fictifs. Les règles de procédure s’inspirent du droit français (code de procédure pénale, code de la sécurité intérieure, code de déontologie).</p>', P => {
@@ -7940,7 +7977,7 @@ function traiterEntrees(A) {
     if (!$('ecran').hidden) { const L = UI.focusables(); if (e === 'down' || e === 'right' && L[UI.focus] && L[UI.focus].type !== 'range') { UI.focus = Math.min(L.length - 1, UI.focus + 1); UI.majFocus(); SON.fx.bip(); } else if (e === 'up' || e === 'left' && L[UI.focus] && L[UI.focus].type !== 'range') { UI.focus = Math.max(0, UI.focus - 1); UI.majFocus(); SON.fx.bip(); }
       else if ((e === 'left' || e === 'right') && L[UI.focus] && L[UI.focus].type === 'range') { const i = L[UI.focus]; i.value = +i.value + (e === 'right' ? 10 : -10); i.oninput && i.oninput(); }
       else if (e === 'ok') { const b = L[UI.focus]; if (b && b.tagName === 'BUTTON') b.click(); else if (b && b.tagName === 'INPUT' && b.type !== 'range') b.focus(); }
-      else if ((e === 'back' || e === 'pause') && !UI.titre) { const k = [...$('panel').querySelectorAll('button')].find(b => /^(Retour|Reprendre)$/.test(b.textContent.trim())); if (k) k.click(); else UI.fermerEcran(); } continue; }
+      else if ((e === 'back' || e === 'pause') && !UI.titre && !UI.modal) { const k = [...$('panel').querySelectorAll('button')].find(b => /^(Retour|Reprendre)$/.test(b.textContent.trim())); if (k) k.click(); else UI.fermerEcran(); } continue; }
     if (DLG.o) { if (e === 'radio') { UI.fermerDlg(); menuRadio(); continue; } if (e === 'up') UI.sel(-1); else if (e === 'down') UI.sel(1); else if (e === 'ok' || e === 'act') UI.choisir(); else if (e === 'back') UI.fermerDlg(); else if (/^n\d$/.test(e) && +e[1] > 0) UI.choisir(+e[1] - 1); continue; }
     if (UI.titre || J.ko) continue;
     switch (e) {
@@ -8287,16 +8324,16 @@ function construireCellule(A) { if (CINE.cell) return; const m = GEO.mergerLots(
   const b = (x, y, z, w, h, d, col, mat = 21) => m.add(GEO.roundBox(w, h, d, 0), M3.translate(ox + x, y + h / 2, oz + z), col, mat);
   b(3, -.02, 3, 6.4, .02, 6.4, [.5, .52, .5]); b(3, 2.8, 3, 6.4, .05, 6.4, [.8, .8, .78]);
   for (const [x, z, w, d] of [[3, -.1, 6.4, .2], [3, 6.1, 6.4, .2], [-.1, 3, .2, 6.4], [6.1, 3, .2, 6.4]]) b(x, 0, z, w, 2.8, d, [.72, .74, .7]);
-  b(3, 0, 3.6, 6, 1.1, .02, [.45, .55, .5]);   // soubassement peint
+  for (const [x, z, w, d] of [[3, .01, 6, .02], [3, 5.99, 6, .02], [.01, 3, .02, 6], [5.99, 3, .02, 6]]) b(x, 0, z, w, 1.1, d, [.45, .55, .5]);   // soubassement peint (sur les murs, et non plus en travers de la cellule)
   b(1.5, 0, 5.3, 2.8, .45, .7, [.6, .6, .58]);   // banc béton de la cellule
   b(.4, 0, 4.4, .45, .42, .5, [.85, .86, .86], 22);   // WC inox
   for (let i = 0; i < 13; i++) b(.15 + i * .24, 0, 3.0, .035, 2.6, .035, [.25, .27, .3], 22);   // barreaux (mur de la cellule)
   b(4.25, 0, 4.55, .12, 2.8, 3.1, [.72, .74, .7]); b(1.6, 2.55, 3.0, 3.1, .08, .08, [.25, .27, .3], 22); b(1.6, 1.0, 3.0, 3.1, .06, .06, [.25, .27, .3], 22);
-  b(3, 2.7, 1.5, 1.2, .05, .3, [2.2, 2.2, 2.0], 8); b(3, 2.7, 4.6, 1.2, .05, .3, [2.2, 2.2, 2.0], 8);   // néons
+  b(3, 2.7, 1.5, 1.2, .05, .3, [1.3, 1.3, 1.2], 8); b(3, 2.7, 4.6, 1.2, .05, .3, [1.3, 1.3, 1.2], 8);   // néons
   b(5.6, 0, 1.0, .6, .9, 1.4, [.35, .3, .26], 13); b(5.6, .9, 1.0, .62, .04, 1.42, [.2, .2, .22], 22);   // bureau du chef de poste
   b(5.9, 1.4, 3.6, .02, .5, .7, [.9, .9, .85], 0);   // registre / affiche des droits
   for (const p of m.build(mk)) { const n = new F.Node('cellule'); n.addPart(p.mesh, null, p.color, p.mat, { cast: false }); n.pickable = false; A.add(n); }
-  const porte = new F.Node('porteCellule'), pm = GEO.merger(); for (let i = 0; i < 5; i++) pm.add(GEO.roundBox(.035, 2.5, .035, 0), M3.translate(i * .22, 1.25, 0), [.25, .27, .3], 22); pm.add(GEO.roundBox(.95, .06, .06, 0), M3.translate(.44, 2.5, 0), [.25, .27, .3], 22); pm.add(GEO.roundBox(.95, .06, .06, 0), M3.translate(.44, 1.1, 0), [.25, .27, .3], 22);
+  const porte = new F.Node('porteCellule'), pm = GEO.merger(); for (let i = 0; i < 5; i++) pm.add(GEO.roundBox(.035, 2.5, .035, 0), M3.translate(i * .22, 1.25, 0), [.25, .27, .3], 22); pm.add(GEO.roundBox(.95, .08, .06, 0), M3.translate(.44, 2.59, 0), [.25, .27, .3], 22); pm.add(GEO.roundBox(.95, .06, .06, 0), M3.translate(.44, 1.03, 0), [.25, .27, .3], 22);
   for (const p of pm.build(mk)) porte.addPart(p.mesh, null, p.color, p.mat, { cast: false }); porte.pickable = false; A.add(porte); CINE.porte = porte; CINE.cell = { ox, oz }; CINE.majPorte = k => { porte.matrix = M3.translate(ox + 3.15 + k * 1.0, 0, oz + 3.0); }; CINE.majPorte(1); }
 function cineOverlay(on, titre, sous) { const e = $('cine'); if (!e) return; e.hidden = !on; document.body.classList.toggle('cine', on); if (on) { e.querySelector('.ct b').textContent = titre || ''; e.querySelector('.ct span').textContent = sous || ''; } }
 function lancerCinematique(plans, fin) { if (!APP) { fin && fin(); return; } CINE.actif = true; CINE.plans = plans; CINE.i = -1; CINE.t = 0; CINE.fin = fin; UI.fermerDlg(); voixStop && voixStop(); planSuivant(); }
@@ -8314,11 +8351,11 @@ function cineEmbarquement(n, info, fin) { construireCellule(APP); const V = VEH,
       maj: (dt, k) => { if (k > .55 && !n.cache) { n.cache = true; SON.fx.porte ? SON.fx.porte() : SON.fx.clic(); } }, eye: k => [porteAR[0] - lx * 2.4 + fx * 1.6, 1.45, porteAR[1] - lz * 2.4 + fz * 1.6], look: () => [porteAR[0], .95, porteAR[1]], fov: 45 },
     { d: 3.2, titre: POSTE_LIBRE() ? 'Transport au poste de quartier' : 'Transport au commissariat du 19e', sous: POSTE_LIBRE() ? 'Deux-tons coupé · TN 75 avisé · poste Marcel Pagnol' : 'Poste de quartier complet · transfert au central du 19e', debut: () => { if (PART) PART.cache = true; V.gyroAv = V.gyro; V.gyro = true; V.cineV = 0; V.x0c = V.x; V.z0c = V.z; },
       maj: (dt, k, A) => { V.cineV = Math.min(9, (V.cineV || 0) + dt * 4); V.x += fx * V.cineV * dt; V.z += fz * V.cineV * dt; for (const R of V.roues) R.a += V.cineV * dt / .33; placerVehicule(); majGyroMondeo(dt, A); }, eye: () => [V.x0c - lx * 7 - fx * 5, 2.2, V.z0c - lz * 7 - fz * 5], look: () => [V.x, .9, V.z], fov: 55 },
-    { d: 4.6, titre: (POSTE_LIBRE() ? 'Poste de police de quartier · ' : 'Commissariat central du 19e · ') + heureTxt(HEURE + .3), sous: 'Mise en cellule de garde à vue — ' + (info.droits ? 'droits notifiés, avocat et médecin demandés' : 'notification des droits à régulariser'), debut: () => { n.cache = false; n.mise = false; n.clipFixe = null; n.x = C.ox + 4.6; n.z = C.oz + 1.6; n.immobile = false; allerVers(n, C.ox + 1.6, C.oz + 4.6, { v: 1.0 }); CINE.majPorte(1); if (PART) { PART.cache = false; PART.x = C.ox + 5.0; PART.z = C.oz + 2.3; arreter(PART); PART.regard = [n.x, n.z]; } },
-      maj: (dt, k, A) => { for (const p of [[3, 1.5], [3, 4.6]]) A.addLight({ p: [C.ox + p[0], 2.5, C.oz + p[1]], c: [.95, .98, 1], i: 22, r: 8 }); if (PART && k > .3) { PART.regard = [n.x, n.z]; if (!n.chem && PART) allerVers(PART, C.ox + 3.6, C.oz + 2.4, { v: 1.2 }); } },
+    { d: 4.6, titre: (POSTE_LIBRE() ? 'Poste de police de quartier · ' : 'Commissariat central du 19e · ') + heureTxt(HEURE + .3), sous: 'Mise en cellule de garde à vue — ' + (info.droits ? 'droits notifiés, avocat et médecin demandés' : 'notification des droits à régulariser'), debut: () => { n.cache = false; n.mise = false; n.clipFixe = null; n.x = C.ox + 4.6; n.z = C.oz + 1.6; n.immobile = false; n.chem = [[C.ox + 3.65, C.oz + 2.3], [C.ox + 3.65, C.oz + 3.7], [C.ox + 1.8, C.oz + 4.4]]; n.dest = n.chem[2]; n.vmax = 1.0; n.courir = false; n.finChem = null; CINE.majPorte(1); if (PART) { PART.cache = false; PART.x = C.ox + 5.0; PART.z = C.oz + 2.3; arreter(PART); PART.regard = [n.x, n.z]; } },
+      maj: (dt, k, A) => { for (const p of [[3, 1.5], [3, 4.6]]) A.addLight({ p: [C.ox + p[0], 2.5, C.oz + p[1]], c: [.95, .98, 1], i: 6, r: 6 }); if (PART && k > .3) { PART.regard = [n.x, n.z]; if (!n.chem && PART) allerVers(PART, C.ox + 3.6, C.oz + 2.4, { v: 1.2 }); } },
       eye: k => [C.ox + 5.7, 1.8, C.oz + .35 + k * .3], look: () => [n.x, 1.0, n.z], fov: 62 },
-    { d: 3.6, titre: 'Cellule n° 3', sous: info.duree, debut: () => { arreter(n); n.x = C.ox + 1.5; n.z = C.oz + 5.15; n.yaw = PI; n.clipFixe = 'Sit_Idle'; n.mise = true; if (PART) { PART.x = C.ox + 3.6; PART.z = C.oz + 2.4; arreter(PART); PART.regard = [C.ox + 3.5, C.oz + 3]; jouer(PART, 'Interact'); } },
-      maj: (dt, k, A) => { CINE.majPorte(1 - Math.min(1, k * 2.2)); if (k > .45 && !CINE.clac) { CINE.clac = true; SON.fx.menottes ? SON.fx.menottes() : SON.fx.clic(); } for (const p of [[3, 1.5], [3, 4.6]]) A.addLight({ p: [C.ox + p[0], 2.5, C.oz + p[1]], c: [.95, .98, 1], i: 22, r: 8 }); },
+    { d: 3.6, titre: 'Cellule n° 3', sous: info.duree, debut: () => { arreter(n); n.x = C.ox + 1.5; n.z = C.oz + 5.15; n.yaw = PI; n.menotte = false; n.props = []; n.clipFixe = 'Sit_Idle'; n.mise = true; if (PART) { PART.x = C.ox + 3.6; PART.z = C.oz + 2.4; arreter(PART); PART.regard = [C.ox + 3.5, C.oz + 3]; jouer(PART, 'Interact'); } },
+      maj: (dt, k, A) => { CINE.majPorte(1 - Math.min(1, k * 2.2)); if (k > .45 && !CINE.clac) { CINE.clac = true; SON.fx.menottes ? SON.fx.menottes() : SON.fx.clic(); } for (const p of [[3, 1.5], [3, 4.6]]) A.addLight({ p: [C.ox + p[0], 2.5, C.oz + p[1]], c: [.95, .98, 1], i: 6, r: 6 }); },
       eye: k => [C.ox + 2.4 - k * .3, 1.45, C.oz + 1.2], look: () => [C.ox + 1.5, .9, C.oz + 5.0], fov: 50 }];
   CINE.clac = false; const retour = { x: CAM.x, z: CAM.z, a: CAM.a, vx: V.x, vz: V.z, vyaw: V.yaw };
   lancerCinematique(plans, () => { n.mise = false; n.clipFixe = null; retirerPNJ(n); V.x = retour.vx; V.z = retour.vz; V.yaw = retour.vyaw; V.gyro = !!V.gyroAv; placerVehicule(); CAM.x = retour.x; CAM.z = retour.z; CAM.a = retour.a; CAM.vx = CAM.vz = 0;
@@ -8501,7 +8538,7 @@ function parlerAccueil(a) { regarderJoueur(a); arreter(a); const L = S.gav || []
 // ---- branchements
 { const _cx = PROC.contexte; PROC.contexte = () => { if (!S || !W.POSTE || VEH.conduit || CINE.actif) return _cx(); const P = W.POSTE, dedans = CAM.x > P.x0 && CAM.x < P.x1 && CAM.z > P.z0 && CAM.z < P.z1;
     if (dedans && PROC.escorte && !PROC.escorte.cache) return { t: 'Placer en garde à vue (' + (S.gav || []).length + ' / 6)', f: () => placerEnCellule(PROC.escorte) };
-    const a = POSTE.agent; if (a && !a.cache && Math.hypot(a.x - CAM.x, a.z - CAM.z) < 2.6) return { t: 'Parler à l’agent d’accueil', f: () => parlerAccueil(a) };
+    const a = POSTE.agent; if (a && !a.cache && Math.hypot(a.x - CAM.x, a.z - CAM.z) < 2.6 && segLibre(CAM.x, CAM.z, a.x, a.z, 2)) return { t: 'Parler à l’agent d’accueil', f: () => parlerAccueil(a) };
     const n = cibleDevant(2.5, .6); if (n && n.detenu) return { t: 'Parler au gardé à vue', f: () => { regarderJoueur(n); dire(n, pick(['Je veux voir mon avocat.', 'J’ai rien à vous dire.', 'Vous pouvez prévenir ma mère ?', 'Il fait froid ici…', 'C’est quand que je sors ?'])); } };
     return _cx(); }; }
 { const _clore = cloreInterpellation; cloreInterpellation = function (n, mode) { const c = PROC.ctl && PROC.ctl.n === n ? PROC.ctl : n._ctl || null; const direct = PROC._posteDirect;
@@ -8509,7 +8546,7 @@ function parlerAccueil(a) { regarderJoueur(a); arreter(a); const L = S.gav || []
     const g = n.graine, sx = n.sexe, lk = n.typeLook; _clore(n, mode);
     if (!direct && c && mode !== 'garde') { if (POSTE_LIBRE()) { ajouterGAV(info, { graine: g, sexe: sx, typeLook: lk }); radio('Poste de quartier', info.nom + ' conduit au poste Marcel Pagnol et placé en garde à vue (' + S.gav.length + ' / 6).', 'ok'); } else radio('TN 75', 'Poste de quartier complet : ' + info.nom + ' transféré au commissariat central du 19e.', ''); } }; }
 { const _cm = ciblesMarqueurs; ciblesMarqueurs = function () { const L = _cm(); if (PROC.escorte && W.SPOTS.poste && !APP_ETAT.lg) L.push({ x: W.SPOTS.poste[0], z: W.SPOTS.poste[1], t: 'Poste de police', evt: false }); return L; }; }
-{ const _mp = majPNJ; majPNJ = function (dt, A) { majPoste(dt); if (W.POSTE && A && Math.hypot(CAM.x - 89, CAM.z - 42) < 30) for (const [x, z, i] of [[84.2, 39.5, 70], [84.2, 44.5, 70], [89.3, 38, 45], [89.3, 42.5, 45], [93, 38, 38], [93, 42, 38], [93, 46, 38], [89, 46, 40], [79.5, 42, 55]]) A.addLight({ p: [x, 3.7, z], c: [.97, .99, 1], i, r: 8.5 }); return _mp(dt, A); }; }
+{ const _mp = majPNJ; majPNJ = function (dt, A) { majPoste(dt); if (W.POSTE && A && Math.hypot(CAM.x - 89, CAM.z - 42) < 30) { const dedans = CAM.x > W.POSTE.x0 && CAM.x < W.POSTE.x1 && CAM.z > W.POSTE.z0 && CAM.z < W.POSTE.z1; for (const [x, z, i, r] of dedans ? [[84.6, 42, 22, 8], [89.3, 42, 14, 6], [93.2, 38, 16, 4.5], [93.2, 42, 16, 4.5], [93.2, 46, 16, 4.5]] : [[84.6, 42, 14, 7]]) A.addLight({ p: [x, 3.6, z], c: [.97, .99, 1], i, r }); A.addLight({ p: [79.6, 3.2, 42], c: [1, .93, .82], i: 7 * Math.max(.35, nuit()), r: 6 }); } return _mp(dt, A); }; }
 self.POSTE = POSTE; self.placerEnCellule = placerEnCellule; self.parlerAccueil = parlerAccueil; self.POSTE_LIBRE = POSTE_LIBRE;
 
 // ================================================================= g7g — menottes en main : maintenir ✕ (E / bouton Action) sur un individu pour le menotter
@@ -8631,7 +8668,7 @@ function majMefiance(dt) { const n = MEF.n; if (!n) return; if (n.cache || !n.gr
   if (d > 26 || MEF.t > 40) { finMefiance(n, true); if (chance(.35)) alerterGroupe(n.groupe, n); return; }
   if (!n.mefQ) { if (d < 2.3) { arreter(n); regarderJoueur(n); n.mefQ = true; if (!DLG.o) questionPiege(n); else n.mefQ = false; } else if (!n.chem || (n._mr = (n._mr || 0) + dt) > .8) { n._mr = 0; allerVers(n, CAM.x, CAM.z, { v: 1.5, maxN: 3000 }); } } }
 function finMefiance(n, retour) { if (MEF.n === n) MEF.n = null; if (!n) return; n.mefApproche = false; n.mefQ = false; n.mefT = 0; n.doute = 0; if (retour && n.posGuet && !n.cache) allerVers(n, n.posGuet[0], n.posGuet[1]); }
-function questionsPieges() { const hv = pick((W.HALLS || []).map(h => h.id)) || 'C', gard = NPCS.some(m => m.role === 'gardien' && !m.cache);
+function questionsPieges() { const hv = (pick((W.HALLS || []).map(h => h.id)) || 'C').replace(/\d+$/, ''), gard = NPCS.some(m => m.role === 'gardien' && !m.cache);
   return [
     { q: 'Wesh. T’es d’où, toi ? J’t’ai jamais vu ici.', r: [['Bâtiment ' + hv + ', chez ma tante. J’viens d’emménager.', 'ok', 'Ah ouais ? … Bon. Vas-y.'], ['Je fais que passer, je cherche un pote.', 'doute', 'Un pote… C’est quoi son blaze, à ton pote ?'], ['Ça te regarde pas.', 'doute', 'Ah ouais ? Tu parles mal, toi…']] },
     { q: 'Tu connais Momo, du bâtiment E ? Il te cherchait tout à l’heure.', r: [['Momo ? Connais pas. Tu dois confondre.', 'ok', '… Ouais, j’confonds p’t’être.'], ['Ah ouais, Momo ! Il est où, là ?', 'ko', 'Y’a pas de Momo au E. T’es un condé, toi !'], ['Il me cherchait pour quoi ?', 'doute', 'Hmm… Laisse tomber.']] },
@@ -8819,6 +8856,36 @@ function epurerDialogue(o, n, rendu) { if (o._brut || (self.__TEST_NORENDER && !
   const els = [...$('dlgBox').querySelectorAll('.c')]; els.forEach((el, i) => { const c = L[i]; if (!c) return; if (c._cat) { el.classList.add('catH'); if (c._risque) el.classList.add('rq'); } if (c._sub) el.classList.add('sub'); if (c._sug) el.classList.add('sug'); });
   if (ouvert) { const i = L.findIndex(c => c._cat === ouvert); if (i >= 0) { DLG.sel = i; UI.sel(0); } } return true; }
 self.epurerDialogue = epurerDialogue;
+
+// ================================================================= v19 — GMD : maintenir pour viser (trajectoire, point d'explosion, rayon d'effet), relâcher pour lancer
+const GVISE = { actif: false, t: 0, k: null, vise0: false, cv: null, aide: null };
+function annulerViseGMD(msg) { if (!GVISE.actif) return; GVISE.actif = false; GVISE.t = 0; if (msg) toast('Lancer annulé — grenade conservée'); dessinerViseGMD(null); }
+{ const _u = utiliser; utiliser = function (A, presse, maintenu, dt) {
+    if (J.arme !== 'gmd') { if (GVISE.actif) annulerViseGMD(); return _u(A, presse, maintenu, dt); }
+    if (!GVISE.actif) { if (!presse || J.ko) return; if (S.munit.gmd <= 0) return _u(A, true, maintenu, dt); if (now() - J.dernierTir < 1500) return; GVISE.actif = true; GVISE.t = 0; GVISE.vise0 = !!(INP.aim || J.viseTouch); SON.fx.clic(); return; }
+    if (maintenu) { GVISE.t += dt; return; }
+    GVISE.k = puissanceGMD(); GVISE.actif = false; dessinerViseGMD(null); J.dernierTir = 0; try { _u(A, true, false, dt); } finally { GVISE.k = null; } }; }
+function puissanceGMD() { return .4 + .6 * Math.min(1, GVISE.t / .9); }
+{ const _te = traiterEntrees; traiterEntrees = function (A) { if (GVISE.actif && (INP.ev.has('back') || INP.ev.has('pause'))) { INP.ev.delete('back'); INP.ev.delete('pause'); annulerViseGMD(true); } return _te(A); }; }
+function dessinerViseGMD(g) { let cv = GVISE.cv; if (!cv) { cv = GVISE.cv = document.createElement('canvas'); cv.id = 'gmdVise'; cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4'; document.body.appendChild(cv);
+    const a = GVISE.aide = document.createElement('div'); a.id = 'gmdAide'; a.className = 'gl'; a.style.cssText = 'position:fixed;left:50%;top:calc(50% - 64px);transform:translate(-50%,-100%);padding:6px 12px;font:600 calc(13px*var(--z)) var(--f-d);letter-spacing:.05em;z-index:6;pointer-events:none;text-align:center;white-space:nowrap'; a.hidden = true; document.body.appendChild(a); }
+  const c = cv.getContext('2d'), dpr = Math.min(2, devicePixelRatio || 1), W2 = innerWidth, H2 = innerHeight; if (!g) { if (cv.width) { c.clearRect(0, 0, cv.width, cv.height); } GVISE.aide.hidden = true; return; }
+  if (cv.width !== Math.round(W2 * dpr) || cv.height !== Math.round(H2 * dpr)) { cv.width = Math.round(W2 * dpr); cv.height = Math.round(H2 * dpr); } c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W2, H2);
+  const P = q => APP.project(q), dJ = Math.hypot(g.fin.p[0] - CAM.x, g.fin.p[2] - CAM.z), danger = dJ < 6, col = danger ? '255,75,75' : '255,179,64';
+  // trajectoire : points espacés, de plus en plus transparents
+  g.pts.forEach((q, i) => { const s = P(q); if (!s || s[2] < .3) return; const a = .95 - i / g.pts.length * .55; c.fillStyle = 'rgba(' + col + ',' + a + ')'; c.beginPath(); c.arc(s[0], s[1], Math.max(1.6, Math.min(4.5, 9 / s[2] * 1.4)), 0, TAU); c.fill(); });
+  const anneau = (q, r, larg, tir) => { c.beginPath(); let ok = false, n0 = true; for (let i = 0; i <= 40; i++) { const a = i / 40 * TAU, s = P([q[0] + Math.cos(a) * r, solGMD(q[0] + Math.cos(a) * r, q[2] + Math.sin(a) * r) + .02, q[2] + Math.sin(a) * r]); if (!s || s[2] < .3) { n0 = true; continue; } if (n0) c.moveTo(s[0], s[1]); else c.lineTo(s[0], s[1]); n0 = false; ok = true; } if (!ok) return; c.setLineDash(tir ? [7, 6] : []); c.lineWidth = larg; c.stroke(); c.setLineDash([]); };
+  c.strokeStyle = 'rgba(0,0,0,.45)'; anneau(g.fin.p, 2.5, 5); c.strokeStyle = 'rgba(' + col + ',.95)'; anneau(g.fin.p, 2.5, 2.5); c.strokeStyle = 'rgba(' + col + ',.55)'; anneau(g.fin.p, 6, 1.6, true);
+  if (g.premier) { c.strokeStyle = 'rgba(255,255,255,.7)'; anneau(g.premier, .35, 1.5); }
+  const s = P([g.fin.p[0], g.fin.p[1] + .1, g.fin.p[2]]); if (s && s[2] > .3) { c.fillStyle = 'rgba(' + col + ',1)'; c.beginPath(); c.arc(s[0], s[1], 4, 0, TAU); c.fill(); c.font = '700 13px Barlow Condensed, sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.7)'; const t = Math.round(dJ) + ' m' + (danger ? ' · TROP PRÈS' : ''); c.strokeText(t, s[0], s[1] - 12); c.fillText(t, s[0], s[1] - 12); }
+  const k = puissanceGMD(), A2 = GVISE.aide; A2.hidden = false; A2.style.color = danger ? 'var(--red)' : 'var(--amber)';
+  A2.innerHTML = 'GMD · puissance ' + Math.round(k * 100) + ' %<br><span style="color:var(--ink);font-weight:500">' + (GP.connecte ? 'Relâcher R2 : lancer · ○ : annuler' : TOUCH ? 'Relâcher « Utiliser » : lancer · « Viser » : annuler' : 'Relâcher le clic : lancer · clic droit / Échap : annuler') + '</span>'; }
+function majViseGMD(dt) { if (!GVISE.actif) return; if (!S || UI.titre || J.arme !== 'gmd' || J.ko || UI.ouvert() || PRG.cb || CINE.actif || VEH.conduit || S.munit.gmd <= 0) { annulerViseGMD(); return; }
+  if ((INP.aim || J.viseTouch) && !GVISE.vise0) { annulerViseGMD(true); return; } if (!(INP.aim || J.viseTouch)) GVISE.vise0 = false;
+  const pts = [], g = simulerGMD(puissanceGMD(), pts); dessinerViseGMD({ pts, fin: g, premier: g.premier }); }
+if (APP) APP.onUpdate(dt => { try { majViseGMD(dt / (APP.echelleTemps || 1)); } catch (e) { console.error('gmd', e); annulerViseGMD(); } });
+addEventListener('resize', () => { if (!GVISE.actif) dessinerViseGMD(null); });
+Object.assign(self, { GVISE, simulerGMD });
 
 })();</script>
 </body>
