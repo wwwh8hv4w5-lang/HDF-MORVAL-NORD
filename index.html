@@ -6249,9 +6249,15 @@ function construireArmes(A) { const mk = a => A.R.makeMesh(a), CYL = GEO.cylinde
   arme('lacry', [['c', [.042, .27], [0, -.05, -.02], 0, [.12, .16, .36], 6], ['c', [.043, .02], [0, .088, -.02], 0, [.06, .06, .07], 10], ['c', [.043, .02], [0, -.18, -.02], 0, noir, 10], ['b', [.06, .06, .002], [0, -.05, -.063], 0, [.9, .85, .2], 6],
     ['b', [.03, .04, .05], [0, .11, -.02], 0, noir, 10], ['b', [.024, .012, .1], [0, .14, -.035], [-.08, 0, 0], noir, 10], ['b', [.022, .014, .06], [0, .13, -.11], [-.1, 0, 0], [.08, .08, .09], 10], ['c', [.007, .05], [0, .128, -.16], [PI / 2, 0, 0], noir, 10],
     ['b', [.028, .1, .03], [0, .06, .03], 0, noir, 10], ...avantBrasD.map(p => (p = p.slice(), p[2] = [p[2][0], p[2][1] + .07, p[2][2] + .02], p)), ['b', [.05, .075, .055], [0, .045, .04], [.1, 0, 0], peau, 5], ...doigts(0, .07, .012, 1, 4, .042, .1)]);
-  // ---- bâton télescopique (trois brins, poignée mousse, embout)
-  const bat = arme('baton', [['c', [.017, .19], [0, -.02, -.01], [PI / 2 - .25, 0, 0], [.05, .05, .055], 10], ['c', [.019, .012], [0, .002, -.1], [PI / 2 - .25, 0, 0], acier, 7], ...avantBrasD, ...mainPoing(1)]);
-  VM.sub.baton.brins = noeud('brins', [['c', [.0125, .25], [0, .036, -.225], [PI / 2 - .25, 0, 0], [.16, .16, .17], 7], ['c', [.009, .24], [0, .094, -.45], [PI / 2 - .25, 0, 0], [.22, .22, .23], 7], ['s', [.011, .011, .011], [0, .125, -.575], 0, [.12, .12, .13], 7]], bat);
+  // ---- bâton télescopique (matraque de police) : poignée mousse cannelée, culot et dragonne, trois tronçons d'acier noirci de diamètres décroissants (bagues), embout boule ; axe incliné vers l'avant et le haut, passant dans le poing
+  const BA = .5, Bs = Math.sin(BA), Bc = Math.cos(BA), BP = d => [0, -.035 + d * Bs, -.004 - d * Bc], BR = [BA - PI / 2, 0, 0], bc = (r, d0, d1, col, mat) => ['c', [r, d1 - d0], BP((d0 + d1) / 2), BR, col, mat];
+  VM.batonAxe = [0, Bs, -Bc];
+  const bat = arme('baton', [bc(.016, -.075, .07, [.03, .03, .033], 10), ...Array.from({ length: 6 }, (_, i) => bc(.0172, -.064 + i * .024, -.058 + i * .024, [.075, .075, .08], 10)), bc(.0185, -.087, -.075, [.16, .16, .17], 7), ['m', 0, BP(-.094), [BA, 0, 0], [.1, .1, .11], 7],
+    bc(.0165, .07, .082, [.3, .31, .33], 7), ...avantBrasD, ...mainPoing(1)]);
+  VM.sub.baton.brins = noeud('brins', [bc(.0125, .082, .225, [.12, .12, .13], 7), bc(.0136, .217, .228, [.42, .43, .45], 7)], bat);
+  VM.sub.baton.brins2 = noeud('brins2', [bc(.0098, .228, .365, [.17, .17, .18], 7), bc(.0108, .357, .367, [.42, .43, .45], 7)], VM.sub.baton.brins);
+  VM.sub.baton.brins3 = noeud('brins3', [bc(.0072, .367, .5, [.22, .22, .23], 7), bc(.0085, .496, .505, [.3, .31, .33], 7), ['s', [.0115, .0115, .0115], BP(.513), 0, [.45, .46, .48], 7]], VM.sub.baton.brins2);
+  for (const k of ['brins', 'brins2', 'brins3']) VM.sub.baton[k].pos = [0, 0, 0];
   // ---- LBD 40 (lanceur monocoup) : tube de 40 mm basculant, crosse, viseur point rouge, poignée avant
   const lbd = arme('lbd', [['b', [.06, .08, .2], [0, .02, -.02], 0, [.08, .08, .085], 10], ['b', [.046, .11, .046], [0, -.065, .02], [.3, 0, 0], noir, 10], ['b', [.05, .045, .22], [0, .03, .19], 0, [.08, .08, .085], 10], ['b', [.05, .09, .03], [0, .0, .3], 0, noir, 10],
     ['b', [.04, .04, .06], [0, .087, -.04], 0, noir, 10], ['b', [.034, .03, .004], [0, .087, -.071], 0, [.3, .5, .6], 3], ['b', [.003, .003, .002], [0, .087, -.07], 0, [5, .15, .1], 8], ['b', [.022, .006, .05], [0, -.024, -.07], 0, noir, 10],
@@ -6292,7 +6298,7 @@ function majArmeEnMain(dt) { const W0 = J.arme, nd = VM.nodes[W0];
     rx = VM.recul * (W0 === 'lbd' ? .5 : .32) - s * .9, ry = lerp(.07, 0, VM.k) + VM.swayX * 1.5 + s * .55 + Math.sin(t * .5) * .012 * (1 - VM.mv) * (1 - VM.k), rz = lerp(-.04, 0, VM.k) - VM.swayX * .8 + roul * (1 - VM.k * .7) - VM.lat * .07 + VM.recul * .1 - s * .3;
   if (W0 === 'lbd' && VM.k < .5) { ox += .06; oy -= .035; oz += .02; ry += .08; }
   if (W0 === 'mains') { oy -= .045; rz = roul * .5; ry = -.12; ox = .21; oz += .03; rx -= .25; oy += Math.sin(bt) * .03 * VM.run; oz -= Math.cos(bt) * .05 * VM.run; rx += Math.cos(bt) * .25 * VM.run; }
-  if (W0 === 'baton') { if (VM.swing > 0) { const e = Math.sin(VM.swing * PI); ox -= e * .2; oy += e * .08; rx -= e * 1.2; ry += e * .7; rz += e * .5; } else { rx += .12; } VM.sub.baton.brins.pos[2] = -VM.sortie * .4; }
+  if (W0 === 'baton') { oy += .07; ox += .02; if (VM.swing > 0) { const ph = 1 - VM.swing, K = [[0, [0, 0, 0, 0, 0, 0]], [.15, [.04, .05, 0, .35, 0, -.1]], [.45, [-.12, -.12, -.08, -.6, .35, .35]], [1, [0, 0, 0, 0, 0, 0]]], i = ph < .15 ? 0 : ph < .45 ? 1 : 2, a = (ph - K[i][0]) / (K[i + 1][0] - K[i][0]), m = a * a * (3 - 2 * a), o = K[i][1].map((v, j) => v + (K[i + 1][1][j] - v) * m); ox += o[0]; oy += o[1]; oz += o[2]; rx += o[3]; ry += o[4]; rz += o[5]; } else { rx += .12; } const bx = VM.batonAxe, sb = VM.sub.baton; [['brins', .14], ['brins2', .135], ['brins3', .135]].forEach(([k, l]) => { const d = -VM.sortie * l; sb[k].pos = [bx[0] * d, bx[1] * d, bx[2] * d]; }); }
   if (W0 === 'gmd' && typeof GVISE !== 'undefined' && GVISE.actif) { const e = Math.min(1, GVISE.t * 4); oy += e * .05; oz += e * .02; rx += e * .35; }
   if (W0 === 'gmd' && VM.lancer > 0) { const e = Math.sin(VM.lancer * PI); oy += e * .18; oz -= e * .12; rx -= e * 1.1; }
   if (VM.menottage && PRG.cb) { oz -= .12 * Math.sin(t * 6.2) ** 2; oy += .04; rz += Math.sin(t * 6.2) * .08; }
