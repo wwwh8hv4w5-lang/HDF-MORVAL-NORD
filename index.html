@@ -6322,8 +6322,10 @@ function majJoueur(dt, A, G) {
   if (TOUCH && OPT.aide && J.vise) aideVisee(dt, .5);
   INP.ldx = 0; INP.ldy = 0;
   // course et endurance
-  const veut = (KEYS.ShiftLeft || KEYS.ShiftRight || J.sprintTog || J.sprintTouch || (TCH.stick && Math.hypot(TCH.stick.dx, TCH.stick.dy) > .97)) && mz > .3 && !J.vise;
-  CAM.sprint = veut && J.end > 3; if (CAM.sprint) J.end = Math.max(0, J.end - dt * (12 - S.comp.physique * 1.4) * (S.dotation.chaussures ? .85 : 1)); else J.end = Math.min(100, J.end + dt * (CAM.vitesse > .5 ? 7 : 13) * (1 + S.comp.physique * .1));
+  const stk = TCH.stick ? Math.hypot(TCH.stick.dx, TCH.stick.dy) : 0; J.stickRun = stk > .97 || (J.stickRun && stk > .9);   // hystérésis : plus de bascule marche/course au bord du stick
+  const veut = (KEYS.ShiftLeft || KEYS.ShiftRight || J.sprintTog || J.sprintTouch || J.stickRun) && mz > .3 && !J.vise;
+  if (J.end <= 3) J.fatigue = true; else if (J.end >= 25) J.fatigue = false;   // essoufflé : pas de reprise de la course avant 25 d'endurance (évite le tremblement marche/course à chaque image)
+  CAM.sprint = veut && !J.fatigue && J.end > 3; if (CAM.sprint) J.end = Math.max(0, J.end - dt * (12 - S.comp.physique * 1.4) * (S.dotation.chaussures ? .85 : 1)); else J.end = Math.min(100, J.end + dt * (CAM.vitesse > .5 ? 7 : 13) * (1 + S.comp.physique * .1));
   if (J.end < 2) { J.sprintTog = false; }
   if (CAM.sprint && J.accroupi) J.accroupi = false;
   J.accK = lerp(J.accK || 0, J.accroupi ? 1 : 0, Math.min(1, dt * 9)); J.plaqueT = Math.max(0, (J.plaqueT || 0) - dt);
