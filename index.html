@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD</title>
+<title>HDF : MORVAL-NORD v18</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6765,7 +6765,7 @@ function majDeals(A) { for (const G of GROUPES) { if (G.type !== 'deal' || !G.de
 
 // ---------------------------------------------------------------- réactions
 function fuir(n, msg) { if (n.etat === 'menotte' || n.etat === 'embarque') return; n.etat = 'fuite'; n.assis = false; n.clipFixe = null; const f = W.SPOTS.fuites.slice().sort((a, b) => { const da = Math.hypot(a[0] - n.x, a[1] - n.z) - Math.hypot(a[0] - CAM.x, a[1] - CAM.z) * .8, db = Math.hypot(b[0] - n.x, b[1] - n.z) - Math.hypot(b[0] - CAM.x, b[1] - CAM.z) * .8; return da - db; })[0];
-  allerVers(n, f[0], f[1], { courir: true, v: rnd(5.0, 6.1) * (n.obj.lourd ? .9 : 1), maxN: 12000 }); n.dest = f; if (PROC.ctl && PROC.ctl.n === n) PROC.ctl = null;
+  allerVers(n, f[0], f[1], { courir: true, v: rnd(5.0, 6.1) * (n.obj.lourd ? .9 : 1), maxN: 12000 }); n.dest = f; if (PROC.ctl && PROC.ctl.n === n) { n._ctl = PROC.ctl; PROC.ctl = null; }   // v18 : le dossier suit le fuyard (repris par ouvrirControle à la recapture)
   if (msg) radio('Fuite', msg, 'ko'); if (n.dE < 40 && (!PROC.poursuite || PROC.poursuite.cache)) { PROC.poursuite = n; dire(PART, pick(['Il se barre !', 'Il part en courant, on le suit !', 'Fuyard ! Je prends à droite !']), { prio: true }); objectif('Poursuite : rattrapez le fuyard (sprint puis ✕ pour plaquer).'); } }
 function echappe(n) { if (PROC.poursuite === n) { PROC.poursuite = null; radio('Fuite', 'Le fuyard vous a semés.', 'ko'); objectif(''); } n.etat = 'libre'; retirerPNJ(n); }
 function finEtat(n) { if (n.etat === 'taser' || n.etat === 'sol') { if (n.menotte) return; n.etat = n.menace >= 3 && chance(.4) ? 'agressif' : 'mains'; n.etatT = n.etat === 'mains' ? 25 : undefined; if (n.etat === 'mains') dire(n, pick(['C’est bon, c’est bon !', 'Arrêtez, je bouge plus !', 'J’ai rien fait !'])); }
@@ -6854,7 +6854,7 @@ PROC.contexte = () => {
   if (n) { if (n.etat === 'fuite') return Math.hypot(n.x - CAM.x, n.z - CAM.z) < 1.7 ? { t: 'Plaquer', f: () => PROC.plaquage(n, null) } : null;
     if ((CAM.sprint || CAM.vitesse > 4.4) && n.dE < 1.9 && !n.menotte && !['sol', 'taser', 'blesse', 'escorte'].includes(n.etat)) return { t: 'Plaquer', f: () => PROC.plaquage(n, null) };
     if (n.etat === 'blesse') return { t: 'Porter secours', f: () => secourir(n) };
-    if (n === PROC.escorte) return { t: 'Escorte en cours', f: () => menuControle(n) };
+    if (n === PROC.escorte) return { t: 'Escorte en cours', f: () => menuControle(n, true) };
     if (n.role === 'commercant') return { t: 'Parler à ' + n.prenom, f: () => parlerCommercant(n) };
     if (n.role === 'gardien') return { t: 'Parler au gardien', f: () => parlerGardien(n) };
     if (n.role === 'victime') return { t: 'Prendre la plainte', f: () => parlerVictime(n) };
@@ -6899,6 +6899,8 @@ function cadreValide(n, cadre) { if (cadre === '78-2-1') { const i = n.indices |
   if (cadre === '78-2-8') return EVTS.some(e => !e.fini && Math.hypot(e.x - n.x, e.z - n.z) < 40) || S.tension > 80 || (n.groupe && n.groupe.tension > 75); return false; }
 function heureDans(a, b) { const h = HEURE; return a < b ? h >= a && h < b : h >= a || h < b; }
 function ouvrirControle(n, force, cadre) { const c = { n, cadre: cadre || (force ? '78-2-1' : null), t0: HEURE, presente: presentationOk(n), vouvoie: true, palpe: false, fouille: false, fouilleIllegale: false, fichier: null, idEtablie: false, idDeclaree: null, infractions: new Set(), afd: [], menotte: false, droits: false, opj: false, gav: false, nullite: false, abus: false, xp: 0, fautes: [] };
+  const p = n._ctl; if (p && p !== c && p.n === n) { for (const k of p.infractions) c.infractions.add(k); if (p.fichierFPR) c.fichierFPR = true; if (p.fichier) c.fichier = p.fichier; if (p.idDeclaree) { c.idDeclaree = p.idDeclaree; c.idEtablie = p.idEtablie; } c.palpe = p.palpe; c.fouille = p.fouille; c.saisieArme = p.saisieArme; c.afd = p.afd; if (p.interpelle) c.infractions.add('rebellion'); c.repris = true; }   // v18 : un fuyard rattrapé garde ses infractions (port d'arme, etc.) → l'OPJ décide bien la GAV
+  n._ctl = c;
   c.valide = force ? true : cadreValide(n, cadre); if (cadre === 'aucun') { c.nullite = true; faute(8, 'Contrôle d’identité sans motif légal : discriminatoire et nul.', false); tensionQuartier(4); if (n.groupe) n.groupe.tension += 15; }
   else if (!c.valide) { c.nullite = true; radio('Procédure', 'Le cadre choisi (' + cadre + ') ne correspond pas à la situation : toute la procédure qui en découle sera annulée.', 'ko'); faute(3, 'Contrôle sur un fondement inadapté.'); }
   if (n.indices) { if (n.indices.has('vu_deal') || n.flagrant === 'achat' || n.flagrant === 'vente') c.infractions.add(n.flagrant === 'achat' ? 'achat' : 'vente'); else if (n.flagrant === 'violences' || n.flagrant === 'vol') c.infractions.add(n.flagrant); if (n.indices.has('vu_violence')) c.infractions.add('violences'); if (n.indices.has('vol')) c.infractions.add('vol'); if (n.indices.has('rebellion')) c.infractions.add('rebellion'); }
@@ -6910,7 +6912,8 @@ function ouvrirControle(n, force, cadre) { const c = { n, cadre: cadre || (force
   menuControle(n); }
 
 // ---------------------------------------------------------------- 2. LE CONTRÔLE
-function menuControle(n) { const c = PROC.ctl && PROC.ctl.n === n ? PROC.ctl : null; if (!c) { ouvrirControle(n, true); return; }
+function menuControle(n, ouvrir) { const c = PROC.ctl && PROC.ctl.n === n ? PROC.ctl : null; if (!c) { if (ouvrir && !n.cache && n.etat !== 'fuite' && n.etat !== 'embarque') ouvrirControle(n, true); return; }   // v18 : sans contrôle en cours, seul un appel explicite (ouvrir) ouvre un dialogue ; les rappels différés (minuteries, jauges) ne rouvrent plus rien
+  if (n.cache || n.etat === 'embarque' || CINE.actif) return;
   const id = c.idDeclaree, fem = n.sexe === 'f', jf = S.joueur.sexe === 'f', memeSexe = fem === jf, inter = c.interpelle, ind = etatsPNJ(n);
   const L = [];
   if (!inter) {
@@ -7004,7 +7007,7 @@ function desescalade(n, c) { const k = .45 + S.comp.nego * .1 + (S.dotation.came
 function autorite(n, c) { const t = 'Vous restez tranquille et vous répondez à mes questions. Compris ?'; direJoueur(t); n.perso.coop = Math.min(1, n.perso.coop + .08); reagir(n, c, 10); UI.fermerDlg();
   setTimeout(() => { if (n.tension > 75 && chance(.5)) { rep(n, c, REPL.outrage[temperament(n)] ? T(n, 'outrage') : T(n, 'tendu')); if (chance(.4)) { c.infractions.add('outrage'); n.indices.add('outrage'); radio('Procédure', 'Outrage caractérisé (art. 433-5 CP).', ''); } } else rep(n, c, 'OK, OK…'); menuControle(n); }, 1500); }
 function irrespect(n, c) { reaction(n, 'faute'); faute(5, 'Tutoiement et propos humiliants : manquement au code de déontologie (R434-14).'); c.abus = true; c.vouvoie = false; reagir(n, c, 30); tensionQuartier(3); UI.fermerDlg();
-  setTimeout(() => { rep(n, c, T(n, 'tutoie')); if (n.tension > 70 && chance(.4)) { n.etat = 'agressif'; n.menace = 3; c.infractions.add('rebellion'); PROC.ctl = null; radio('Escalade', 'Il vous repousse violemment !', 'ko'); } else menuControle(n); }, 1500); }
+  setTimeout(() => { rep(n, c, T(n, 'tutoie')); if (n.tension > 70 && chance(.4)) { n.etat = 'agressif'; n.menace = 3; c.infractions.add('rebellion'); n._ctl = c; PROC.ctl = null; radio('Escalade', 'Il vous repousse violemment !', 'ko'); } else menuControle(n); }, 1500); }
 function mediationHall(n) { const G = n.groupe, k = .35 + S.comp.nego * .1 - G.tension / 200 + (S.reputation - 50) / 200; UI.fermerDlg(); const t = 'Messieurs, bonsoir. Les habitants doivent pouvoir passer : vous libérez le hall, s’il vous plaît.';
   direJoueur(t);
   setTimeout(() => { if (chance(k)) { dire(n, pick(['Bon, OK, on bouge.', 'C’est bon, on s’en va.', 'Ouais ouais, on y va.'])); for (const m of G.membres) if (m.etat === 'libre' && !m.cache && m !== G.dealer) { m.assis = false; m.clipFixe = null; const p = pick(W.SPOTS.passages); allerVers(m, p[0], p[1], { v: 1.3, fin: () => { if (m.dE > 30) retirerPNJ(m); } }); m.indices.delete('hall'); }
@@ -7026,7 +7029,7 @@ function menotter(n, c) { direJoueur('Mettez vos mains dans le dos. Je vous pass
   UI.fermerDlg(); J.armeAvant = J.arme; choisirArme('menottes', true); debutMenottage(n, c); progression('Menottage…', 2.4 - S.comp.gtpi * .2, () => { finMenottage(n); SON.fx.menottes(); c.menotte = true; n.menotte = true; n.etat = 'menotte'; n.etatT = undefined; n.props = [{ prop: 'Handcuffs', socket: 'Socket_Hand_R', q: [0, 0, 0, 1], t: [0, 0, 0] }]; n.menace = 0; n.clipFixe = 'Idle';
     if (!justif && n.perso.coop > .7) faute(1, 'Menottage sans nécessité.'); gain(8, 0); rep(n, c, T(n, 'menottes')); menuControle(n); }); }
 function rendreCompteOPJ(n, c) { UI.fermerDlg(); SON.fx.radio(); const t = 'BAC 75 Nord 12 pour OPJ de permanence : interpellation d’un individu pour ' + motifsTexte(c) + ', cité Marcel Pagnol.'; parler(t, Object.assign(voixJoueur(), { r: 1.2 })); radio('Vous → OPJ', 'Interpellation pour ' + motifsTexte(c) + '.', '');
-  progression('Compte rendu à l’OPJ…', 3, () => { c.opj = true; const grave = c.infractions.has('vente') || c.infractions.has('arme') || c.infractions.has('violences') || c.infractions.has('vol') || c.infractions.has('rebellion') || c.fichierFPR || c.infractions.has('detention') || c.infractions.has('fausseId') || c.infractions.has('outrage');
+  progression('Compte rendu à l’OPJ…', 3, () => { c.opj = true; let grave = c.infractions.has('vente') || c.infractions.has('arme') || c.saisieArme || !!(n.indices && n.indices.has('arme')) || !!(n.obj && (n.obj.couteau || n.obj.arme)) || (n.gravite || 0) >= 1 || c.infractions.has('fpr') || c.infractions.has('violences') || c.infractions.has('vol') || c.infractions.has('rebellion') || c.fichierFPR || c.infractions.has('detention') || c.infractions.has('fausseId') || c.infractions.has('outrage'); if (grave && !c.infractions.size && !c.fichierFPR) c.infractions.add('arme'); if (self.__OPJ_GAV !== undefined) grave = !!self.__OPJ_GAV;   // v18 : décision déterministe (port d'arme même si le contrôle a été rouvert) ; __OPJ_GAV force la réponse dans les tests
     c.gavDecidee = grave; const txt = grave ? 'Reçu. Je place l’individu en garde à vue à compter de l’interpellation. Notifiez-lui ses droits immédiatement et conduisez-le au service.' : 'Reçu. Pas de garde à vue pour cette infraction : relevez l’identité, convocation ultérieure, laissez-le libre.';
     SON.fx.radioFin(); parler(txt, { g: 'm', p: .7, r: 1.18, idx: 3 }); radio('OPJ de permanence', txt, 'ok'); gain(6, 1); menuControle(n); }); }
 function notifierDroits(n, c) { const bon = 'Vous êtes placé en garde à vue pour ' + motifsTexte(c) + ', pour 24 heures renouvelables. Vous avez le droit à un avocat, d’être examiné par un médecin, de faire prévenir un proche et votre employeur, d’être assisté d’un interprète, de faire des déclarations, de répondre aux questions ou de vous taire.';
@@ -7042,7 +7045,7 @@ function libererApresOPJ(n, c) { UI.fermerDlg(); c.libre = true; gain(12, 1, 'Co
 function finControle(n, c, silencieux) { UI.fermerDlg(); if (!silencieux) { const t = c.idEtablie ? 'C’est terminé, merci de votre coopération. Bonne soirée.' : 'C’est bon, vous pouvez y aller.'; direJoueur(t); setTimeout(() => dire(n, T(n, 'fin')), 1800); }
   if (c.infractions.has('vente') || c.fichierFPR || c.infractions.has('arme')) faute(4, 'Vous laissez repartir un individu en infraction grave : manquement à l’obligation d’agir.');
   if (!c.nullite && c.cadre !== 'aucun' && !c.abus) { const x = 8 + (c.afd.length ? 0 : 0) + (c.desesc ? 4 : 0) + (c.idEtablie ? 4 : 0); gain(x, c.idEtablie ? 1 : 0, 'Contrôle conduit dans les règles'); if (n.groupe) n.groupe.tension = Math.max(0, n.groupe.tension - 4); }
-  if (c.nullite) S.stats.nullites++; n.etat = 'libre'; n.menotte = false; n.props = []; n.regard = null; n.clipFixe = n.assis ? n.clipFixe : null; PROC.ctl = null; if (n.groupe && n.groupe.type === 'occupation' && n.groupe.verbalise >= 2 && chance(.5)) { for (const m of n.groupe.membres) if (m.etat === 'libre') { const p = pick(W.SPOTS.passages); allerVers(m, p[0], p[1], { fin: () => m.dE > 30 && retirerPNJ(m) }); } }
+  if (c.nullite) S.stats.nullites++; n.etat = 'libre'; n.menotte = false; n.props = []; n.regard = null; n.clipFixe = n.assis ? n.clipFixe : null; PROC.ctl = null; n._ctl = null; if (n.groupe && n.groupe.type === 'occupation' && n.groupe.verbalise >= 2 && chance(.5)) { for (const m of n.groupe.membres) if (m.etat === 'libre') { const p = pick(W.SPOTS.passages); allerVers(m, p[0], p[1], { fin: () => m.dE > 30 && retirerPNJ(m) }); } }
   journal('Contrôle d’identité', (c.idDeclaree ? c.idDeclaree.prenom + ' ' + c.idDeclaree.nom : 'identité non établie') + ' · cadre ' + c.cadre + (c.afd.length ? ' · AFD : ' + c.afd.join(', ') : '') + (c.nullite ? ' · procédure irrégulière' : '')); }
 // embarquement (au véhicule ou par l'équipage de transport) : bilan du dossier
 function cloreInterpellation(n, mode) { const c = PROC.ctl && PROC.ctl.n === n ? PROC.ctl : n._ctl || null; n.etat = 'embarque'; n.solide = false; if (PROC.escorte === n) PROC.escorte = null; objectif('');
@@ -7159,7 +7162,7 @@ function inspecterHall(H, G, chien) { UI.fermerDlg(); progression(chien ? 'Le ch
 function secourir(n) { UI.fermerDlg(); direJoueur('Monsieur ? Vous m’entendez ? Restez avec moi, les secours arrivent.'); progression('Premiers secours (gestes de secourisme, garrot, PLS)…', 5, () => { n.secouru = true; radio('Secours', 'Victime en PLS, saignement comprimé. Le SAMU doit la prendre en charge.', 'ok'); gain(10, 1); if (!PROC.samuDemande) demanderSAMU(); PROC.samuDemande = true; setTimeout(() => PROC.samuDemande = false, 45000); }); }
 
 // ---------------------------------------------------------------- ÉVÉNEMENTS DYNAMIQUES
-PROC.aborder = n => aborder(n); PROC.menuControle = n => menuControle(n);
+PROC.aborder = n => aborder(n); PROC.menuControle = n => menuControle(n, true);
 const RIXES = [], FEUX = []; let MALAISE = null, prochainEvt = 0;
 function objectif(t) { PROC.objExpl = t || ''; majObjectifLigne(); }
 function majObjectifLigne() { let x = PROC.objExpl || evtTexte(); if (!x && S && S.suivie) { const m = MISSIONS.find(m => m.id === S.suivie); if (m) { const st = etapeMission(m); if (st >= 0) x = m.n + ' — étape ' + (st + 1) + '/' + m.etapes.length + ' : ' + m.etapes[st].t; } } const v = x ? '◆ ' + x : ''; if ($('objT').textContent !== v) $('objT').textContent = v; }
@@ -7363,7 +7366,7 @@ function menuQuestions(n) { const c = PROC.ctl && PROC.ctl.n === n ? PROC.ctl : 
   if (n.mineur || (n.idConnue && /ans/.test(ageDe(n.idConnue)) && parseInt(ageDe(n.idConnue)) < 18)) Q('« Vous êtes mineur. Il est tard : on va prévenir vos parents. »', () => { rep(n, c, pick(['Non ! Pas ma mère !', 'D’accord… Elle s’appelle Fatou, voilà son numéro.', 'Mon père va me tuer…'])); c.parents = true; gain(8, 1, 'Mineur : parents avisés'); S.reputation = clamp(S.reputation + 1, 0, 100); setTimeout(() => menuQuestions(n), 1800); });
   if (n.groupe) Q('« Messieurs, reculez de deux mètres, s’il vous plaît. »', () => { const G = n.groupe; let ok = 0; for (const m of G.membres) if (m !== n && !m.cache && m.etat === 'libre') { const dx = m.x - n.x, dz = m.z - n.z, d = Math.hypot(dx, dz) || 1; if (chance(.6 + S.comp.nego * .05 - G.tension / 300)) { const P = navProche(m.x + dx / d * 2, m.z + dz / d * 2); allerVers(m, P[0], P[1], { v: 1 }); ok++; } else dire(m, pick(['On est où on veut.', 'On bouge pas, on regarde.'])); } if (ok) G.tension = Math.max(0, G.tension - 4); setTimeout(() => menuQuestions(n), 1200); });
   if (n.groupe && n.groupe.membres.some(m => m.filme)) Q('« Vous pouvez filmer, c’est votre droit. On fait notre travail. »', () => { const G = n.groupe; G.tension = Math.max(0, G.tension - 8); const m = G.membres.find(m => m.filme); if (m) dire(m, pick(['Ouais, on filme, on sait jamais.', 'Ok, ok.'])); gain(5, 1); S.reputation = clamp(S.reputation + 1, 0, 100); setTimeout(() => menuQuestions(n), 1400); });
-  L.push({ t: 'Revenir au contrôle', f: () => menuControle(n) });
+  L.push({ t: 'Revenir au contrôle', f: () => menuControle(n, true) });
   UI.dialogue({ nom: nomAffiche(n) || desc(n).replace(/^./, s => s.toUpperCase()), role: 'questions · ' + (n.hall ? n.hall.nom : 'cité'), etat: etatsPNJ(n), texte: c.dernier ? '« ' + c.dernier + ' »' : 'Que lui demandez-vous ?', choix: L }, n); }
 
 // ---- indicateurs d'objectifs dans le monde : colonne de lumière douce et anneau au sol sur la cible suivie
@@ -7846,7 +7849,7 @@ function icone(k) { const P = { main: 'M8 20V9a2 2 0 014 0v6V5a2 2 0 014 0v10V7a
 // ---------------------------------------------------------------- écrans : titre, création, charger, pause
 function resumeSlot(i) { const s = SAVE.lire(i); if (!s) return null; return s; }
 function ecranTitre() { UI.titre = true; $('marqs').innerHTML = ''; MQ.length = 0; voixStop(); $('hud').hidden = true; $('tc').hidden = true; for (const k in VM.nodes) VM.nodes[k].visible = false; const d = SAVE.dernier();
-  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive)</p>' +
+  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 18</p>' +
     (d ? '<button class="mbtn prim" id="t1">Continuer<small>' + esc(SAVE.lire(d).joueur.prenom + ' ' + SAVE.lire(d).joueur.nom) + ' · ' + GRADES[gradeDe(SAVE.lire(d).xp)].n + '</small></button>' : '') +
     '<button class="mbtn ' + (d ? '' : 'prim') + '" id="t2">Nouvelle carrière</button><button class="mbtn" id="t3">Charger une partie</button><button class="mbtn" id="t4">Commandes</button><button class="mbtn" id="t5">Mémo : la procédure</button><button class="mbtn" id="t6">Options</button>' +
     '<p class="note" style="margin-top:14px">Jeu de simulation. Personnages, lieux et faits sont fictifs. Les règles de procédure s’inspirent du droit français (code de procédure pénale, code de la sécurité intérieure, code de déontologie).</p>', P => {
@@ -8521,7 +8524,8 @@ function menotterDirect(n) { const c0 = PROC.ctl && PROC.ctl.n === n ? PROC.ctl 
   if (chance(resiste * (legal ? 1 : 1.4))) { if (t === 'nerveux' || chance(.4)) { dire(n, 'Non ! Lâchez-moi !'); fuirApresSigne(n, 'Il se dégage au moment du menottage et s’enfuit !'); return; } jouer(n, 'Push'); dire(n, pick(['Touche-moi pas !', 'Lâche-moi !'])); c.infractions.add('rebellion'); n.etat = 'agressif'; n.combat = true; CAM.recul = (CAM.recul || 0) - .04; colDit && colDit('Rébellion ! Je t’aide, on l’amène au sol !', true); return; }
   if (n.etat === 'libre' || n.etat === 'controle') { n.etat = 'mains'; arreter(n); }
   menotter(n, c); }
-function majMenottesMaintien(dt) { const e = $('menoAnneau'); if (!S || UI.ouvert() || J.arme !== 'menottes' || PRG.cb || VEH.conduit || CINE.actif) { MENO.t = 0; MENO.n = null; if (e && !e.hidden) e.hidden = true; return; }
+function majMenottesMaintien(dt) { const e = $('menoAnneau'); if (S && J.arme === 'menottes' && DLG.o !== null && !UI.roue && !UI.radiale && $('ecran').hidden && boutonMaintenu() && DLG.n && DLG.n === cibleMenottes()) UI.fermerDlg();   // v18 : ✕ maintenu sur l'individu du dialogue ouvert → on ferme le dialogue et la jauge démarre
+  if (!S || UI.ouvert() || J.arme !== 'menottes' || PRG.cb || VEH.conduit || CINE.actif) { MENO.t = 0; MENO.n = null; if (e && !e.hidden) e.hidden = true; return; }
   const n = cibleMenottes(); if (!n || !boutonMaintenu()) { MENO.t = Math.max(0, MENO.t - dt * 3); MENO.n = n; if (e) e.hidden = MENO.t <= 0; if (e && MENO.t > 0) e.style.setProperty('--k', MENO.t / 1.1); return; }
   if (MENO.n !== n) { MENO.n = n; MENO.t = 0; } MENO.t += dt; if (e) { e.hidden = false; e.style.setProperty('--k', Math.min(1, MENO.t / 1.1)); e.querySelector('b').textContent = 'Menotter ' + (n.idConnue ? n.idConnue.prenom : roleNom(n).toLowerCase()); }
   if (MENO.t >= 1.1) { MENO.t = 0; if (e) e.hidden = true; menotterDirect(n); } }
@@ -8533,7 +8537,7 @@ self.menotterDirect = menotterDirect; self.MENO = MENO;
 { const _cx = PROC.contexte; PROC.contexte = () => { const c = _cx(); if (S && J.arme === 'menottes' && !VEH.conduit && !CINE.actif && !PROC.escorte && !PROC.poursuite) { const n = cibleMenottes(); if (n && n.etat !== 'fuite' && !(c && /Plaquer/.test(c.t))) return { t: (c ? c.t + ' · ' : '') + 'maintenir : menotter', f: () => { MENO.attente = c ? c.f : null; MENO.tAppui = now(); } }; } return c; }; }
 // appui bref : action habituelle ; appui maintenu : menottage
 { const _mm = majMenottesMaintien; majMenottesMaintien = function (dt) { if (MENO.attente && (!boutonMaintenu() || now() - MENO.tAppui > 400)) { const f = MENO.attente; MENO.attente = null; if (!boutonMaintenu() && now() - MENO.tAppui <= 400) { try { f(); } catch (e) { console.error(e); } return; } } return _mm(dt); }; }
-self.__dbgMeno = () => ({ cib: !!cibleMenottes(), bm: boutonMaintenu(), keyE: !!KEYS.KeyE, s: !!S, ouv: UI.ouvert(), prg: !!PRG.cb, veh: !!VEH.conduit, cine: !!CINE.actif, arme: J.arme, t: MENO.t, att: !!MENO.attente });
+self.__dbgMeno = () => ({ dlg: DLG.o ? (DLG.o.nom || DLG.o.titre || '?') + ' / ' + (DLG.n ? roleNom(DLG.n) : '-') + ' / ' + (DLG.o.choix || []).slice(0, 3).map(c => c && c.t).join(' | ') : null, ecran: !$('ecran').hidden, roue: !!UI.roue, radiale: !!UI.radiale, cib: !!cibleMenottes(), bm: boutonMaintenu(), keyE: !!KEYS.KeyE, s: !!S, ouv: UI.ouvert(), prg: !!PRG.cb, veh: !!VEH.conduit, cine: !!CINE.actif, arme: J.arme, t: MENO.t, att: !!MENO.attente });
 
 // ================================================================= g7h — ligne N : rames qui sortent d'un tunnel, s'arrêtent en gare de Morval-Nord, ouvrent leurs portes côté quai et repartent dans l'autre tunnel
 const TRAIN = { nd: null, z: 0, phase: 'attente', t: 8, sens: 1, u: 0, T: 1, z0: 0, D: 0, portes: 0, portesNd: [], feux: [], nuitNd: null, annonce: false, voy: 0, n: 0 };
@@ -8714,6 +8718,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
+const HDF_VERSION = '18'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -8814,4 +8819,12 @@ function epurerDialogue(o, n, rendu) { if (o._brut || (self.__TEST_NORENDER && !
 self.epurerDialogue = epurerDialogue;
 
 })();</script>
-</body></html>
+</body>
+<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v18 (2 nov. 2026)
+Repères : voir NOTE_CORRECTION.md (modules g1…g7l, coordonnées, drapeaux de test). Pas de src/ dans cette session : correctifs appliqués directement dans le HTML construit ; à reporter dans src/ (g4_npc fuir, g5_proc ouvrirControle/menuControle/rendreCompteOPJ/finControle, g7g majMenottesMaintien) avant le prochain build.js.
+v18 — deux tests corrigés (219/222 → attendu 222/222) :
+ 1. OPJ / garde à vue : fuir() ne jetait plus le contrôle qu'en le perdant (PROC.ctl = null) ; à la recapture (menotterDirect, collegueMenotte, plaquage) ouvrirControle repartait d'un dossier vide → l'OPJ ne voyait plus le port d'arme et refusait la GAV, donc pas de notification des droits. Désormais le dossier suit le PNJ (n._ctl), ouvrirControle le reprend (infractions, FPR, identité, arme saisie, + rébellion si l'interpellation avait commencé), finControle l'efface. rendreCompteOPJ compte aussi c.saisieArme, n.indices 'arme', n.gravite ≥ 1 ; crochet de test self.__OPJ_GAV = true/false force la décision.
+ 2. Menottes en main (maintenir ✕) : le dialogue qui bloquait venait de menuControle(n) appelé par une minuterie ou une jauge d'un test précédent : sans contrôle en cours il ouvrait un contrôle neuf (ouvrirControle). Maintenant menuControle(n) sans contrôle ne fait rien, sauf appel explicite menuControle(n, true) (contexte « Escorte en cours », PROC.menuControle, « Revenir au contrôle », bouton « Maîtriser / menotter » qui ouvre lui-même). En plus, ✕ maintenu avec les menottes en main sur l'individu du dialogue ouvert ferme ce dialogue et lance la jauge. __dbgMeno() indique maintenant le dialogue ouvert (nom / cible / 3 premiers choix).
+Version affichée : <title>, sous-titre de l'écran titre (« version 18 »), constante HDF_VERSION (g7j).
+-->
+</html>
