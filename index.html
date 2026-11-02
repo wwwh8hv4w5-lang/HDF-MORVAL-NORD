@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v32</title>
+<title>HDF : MORVAL-NORD v33</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5496,8 +5496,8 @@ function parler(txt, v = {}, prio) { if (!OPT.voix || !('speechSynthesis' in win
   VOIX.file.push({ t, v }); if (VOIX.file.length > 3) VOIX.file.splice(0, VOIX.file.length - 3); voixSuite(); }
 function voixSuite() { if (VOIX.parle || !VOIX.file.length) return; const { t, v } = VOIX.file.shift(), S = speechSynthesis, n = ++VOIX.n; VOIX.parle = true; VOIX.debut = now();
   const u = new SpeechSynthesisUtterance(t), g = v.g || 'm'; let voix = g === 'f' ? VOIX.f || VOIX.def : VOIX.m || VOIX.def; if (g === 'm' && v.idx !== undefined && VOIX.hommes && VOIX.hommes.length > 1) voix = VOIX.hommes[v.idx % VOIX.hommes.length];
-  u.lang = 'fr-FR'; if (voix) u.voice = voix; u.pitch = clamp(v.p !== undefined ? v.p : (g === 'f' ? 1.08 : .95), .3, 1.8); u.rate = clamp(v.r || 1.05, .6, 1.6); u.volume = 1;
-  u.onstart = () => SON.duck(.35); const fin = () => { if (n !== VOIX.n && !VOIX.parle) return; VOIX.parle = false; SON.duck(1); setTimeout(voixSuite, 60); }; u.onend = fin; u.onerror = fin;
+  u.lang = 'fr-FR'; if (voix) u.voice = voix; u.pitch = clamp(v.p !== undefined ? v.p : (g === 'f' ? 1.08 : .95), .3, 1.8); u.rate = clamp(v.r || 1.05, .6, 1.6); const vol = clamp(v.vol !== undefined ? v.vol : 1, 0, 1); u.volume = vol;   // v33 : volume selon la distance
+  u.onstart = () => SON.duck(.35 + (1 - vol) * .5); const fin = () => { if (n !== VOIX.n && !VOIX.parle) return; VOIX.parle = false; SON.duck(1); setTimeout(voixSuite, 60); }; u.onend = fin; u.onerror = fin;
   try { if (S.paused) S.resume(); S.speak(u); } catch (e) { fin(); } setTimeout(() => { if (VOIX.parle && n === VOIX.n) fin(); else if (VOIX.parle && now() - VOIX.debut > 1400 + t.length * 95 && !S.speaking) { VOIX.parle = false; voixSuite(); } }, 1400 + t.length * 95); }
 
 // ---------------------------------------------------------------- vibration manette / téléphone
@@ -6574,7 +6574,12 @@ function majPNJ(dt, A) {
     const dE = Math.hypot(n.x - CAM.x, n.z - CAM.z); n.dE = dE; n.vis = dE < (self.__devWall ? 170 : DIST_VIS) && (dE < 3 || !JOE.fr || M3.sphereVisible(JOE.fr, n.x, .95, n.z, 1.3));
     n.ch.extraProps = n.props; if (n.menotte && !n.couche && (n.vis || n.dE < 30)) poseMainsDos(n.ch, dt); else { n.ch.tick(dt); if (n.anim === 'Victory') { const pl = n.ch.player, h = n.ch.pack.joeSkel.byName.Hips; pl.T[h * 3] = 0; pl.T[h * 3 + 1] = .92; pl.T[h * 3 + 2] = 0; }   /* v20 : mains en l'air = clip Victory sans ses sauts (bassin figé à sa hauteur de repos) */ if (n.vis) n.ch.pose(); } } }
 function jouer(n, clip) { n.anim1 = clip; n.anim1Nouveau = true; }
-function dire(n, txt, opts = {}) { n.parleT = Math.max(n.parleT, 1.6 + txt.length * .045); if (n.dE === undefined || n.dE < 30 || opts.loin) { parler(txt, n.voix, opts.prio); sousTitre((n.estCollegue ? 'Brig.-chef ' + PART.nom : n.idConnue ? n.idConnue.prenom : n.connu ? n.prenom : n.role === 'renfort' ? 'Police secours' : roleNom(n)) , txt); } }
+function dire(n, txt, opts = {}) { n.parleT = Math.max(n.parleT, 1.6 + txt.length * .045);
+  // v33 : portée auditive réelle — voix normale 16 m, cri 34 m ; volume qui baisse avec la distance, étouffé derrière un mur ; le binôme, les collègues et la personne contrôlée s'entendent toujours
+  const d = Math.hypot(CAM.x - n.x, CAM.z - n.z), proche = n.estCollegue || n.role === 'renfort' || n.role === 'samu' || n.role === 'accueil' || n.role === 'detenu' || opts.prio || (DLG.o && DLG.n === n) || (PROC.ctl && PROC.ctl.n === n) || n === PROC.escorte || n === PROC.poursuite;
+  const portee = opts.loin ? 34 : 16; if (!proche && d > portee) return; let vol = proche ? 1 : clamp(1 - Math.max(0, d - 3) / (portee - 3), .12, 1);
+  if (!proche && d > 6 && !segLibre(n.x, n.z, CAM.x, CAM.z)) { vol *= .45; if (vol < .16) return; }
+  { parler(txt, Object.assign({}, n.voix || {}, { vol }), opts.prio); sousTitre((n.estCollegue ? 'Brig.-chef ' + PART.nom : n.idConnue ? n.idConnue.prenom : n.connu ? n.prenom : n.role === 'renfort' ? 'Police secours' : roleNom(n)) , (vol < .4 ? '(au loin) ' : '') + txt); } }
 function roleNom(n) { return { jeune: n.sexe === 'f' ? 'Une jeune' : 'Un jeune', dealer: 'Un jeune', guetteur: 'Guetteur', resident: n.sexe === 'f' ? 'Une habitante' : 'Un habitant', commercant: 'Épicier', gardien: 'Gardien', victime: 'Victime', agresseur: 'Individu', forcene: 'Individu', tireur: 'Individu armé', client: 'Un client', samu: 'SAMU', accueil: 'Agent d’accueil (poste)', detenu: 'Gardé à vue', renfort: n.sexe === 'f' ? 'Gardienne de la paix (police secours)' : 'Gardien de la paix (police secours)', collegue: 'Brig.-chef Delattre' }[n.role] || 'Individu'; }
 function voitJoueur(n, portee = 30) { const d = Math.hypot(CAM.x - n.x, CAM.z - n.z); if (d > portee) return false; if (d < 4) return true; return segLibre(n.x, n.z, CAM.x, CAM.z); }
 function regarderJoueur(n) { if (n.dos) return; n.regard = [CAM.x, CAM.z]; }
@@ -7909,7 +7914,7 @@ function icone(k) { const P = { main: 'M8 20V9a2 2 0 014 0v6V5a2 2 0 014 0v10V7a
 // ---------------------------------------------------------------- écrans : titre, création, charger, pause
 function resumeSlot(i) { const s = SAVE.lire(i); if (!s) return null; return s; }
 function ecranTitre() { UI.titre = true; $('marqs').innerHTML = ''; MQ.length = 0; voixStop(); $('hud').hidden = true; $('tc').hidden = true; for (const k in VM.nodes) VM.nodes[k].visible = false; const d = SAVE.dernier();
-  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 32</p>' +
+  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 33</p>' +
     (d ? '<button class="mbtn prim" id="t1">Continuer<small>' + esc(SAVE.lire(d).joueur.prenom + ' ' + SAVE.lire(d).joueur.nom) + ' · ' + GRADES[gradeDe(SAVE.lire(d).xp)].n + '</small></button>' : '') +
     '<button class="mbtn ' + (d ? '' : 'prim') + '" id="t2">Nouvelle carrière</button><button class="mbtn" id="t3">Charger une partie</button><button class="mbtn" id="t4">Commandes</button><button class="mbtn" id="t5">Mémo : la procédure</button><button class="mbtn" id="t6">Options</button>' +
     '<p class="note" style="margin-top:14px">Jeu de simulation. Personnages, lieux et faits sont fictifs. Les règles de procédure s’inspirent du droit français (code de procédure pénale, code de la sécurité intérieure, code de déontologie).</p>', P => {
@@ -8778,7 +8783,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '32'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '33'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -8992,7 +8997,8 @@ Object.assign(self, { GVISE, simulerGMD });
 
 })();</script>
 </body>
-<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v32 (2 nov. 2026)
+<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v33 (2 nov. 2026)
+v33 — dire() : portée auditive (16 m, 34 m si opts.loin), volume décroissant (v.vol → u.volume dans voixSuite), étouffé derrière un mur (segLibre), sous-titre « (au loin) » sous 40 % ; toujours audibles : binôme, renforts, SAMU, accueil, détenus, personne contrôlée/escortée/poursuivie, prio.
 v32 — bandes : anim1 'Drink' effacé en marchant et après 1,7 s (jambes figées).
 v31 — g7n BANDES : jusqu'à 4 bandes de 2-3 jeunes (11 h → 4 h) qui vont de coin en coin devant les halls (bandeSpot via H.P), un chef + suiveurs, fument (anim Drink + A.fx.emit smoke, odeur radio si joint), 60 % cannabis / 20 % résine (profilJeune + ajout), n.bande.
 v30 — horaires du match 8 h → 3 h (avant : fermé dès 1 h, d'où le terrain vide la nuit) ; à la réouverture les joueurs reprennent (balade remise à false).
