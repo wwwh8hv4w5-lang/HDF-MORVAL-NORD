@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v19</title>
+<title>HDF : MORVAL-NORD v32</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5587,7 +5587,7 @@ function construireMonde(A) {
     const faces = [{ n: [0, -1], c: B.z0, a: 'x', L0: B.x0, L1: B.x1 }, { n: [0, 1], c: B.z1, a: 'x', L0: B.x0, L1: B.x1 }, { n: [-1, 0], c: B.x0, a: 'z', L0: B.z0, L1: B.z1 }, { n: [1, 0], c: B.x1, a: 'z', L0: B.z0, L1: B.z1 }];
     for (const f of faces) { const L = f.L1 - f.L0, nb = Math.max(1, Math.floor(L / 3.1)), pas = L / nb, longue = L > 25;
       for (let e = 0; e < B.etages; e++) { const y = e === 0 ? 1.7 : RDC + (e - 1) * FH + 1.5;
-        for (let i = 0; i < nb; i++) { const u = f.L0 + pas * (i + .5); if (e === 0) { let pres = false; for (const h of B.halls) { const hu = h.at, cote = h.cote; if (((cote === 'S' && f.n[1] === 1) || (cote === 'N' && f.n[1] === -1) || (cote === 'E' && f.n[0] === 1) || (cote === 'W' && f.n[0] === -1)) && Math.abs(u - hu) < h.w / 2 + 1.6) pres = true; } if (pres) continue; if (i % 3 === 1) { const xo = f.a === 'x' ? u : f.c + f.n[0] * .05, zo = f.a === 'x' ? f.c + f.n[1] * .05 : u; box(xo, 0, zo, f.a === 'x' ? 1.15 : .1, 2.15, f.a === 'x' ? .1 : 1.15, [.32, .34, .36], 22); box(f.a === 'x' ? xo : xo + f.n[0] * .03, 2.15, f.a === 'x' ? zo + f.n[1] * .03 : zo, f.a === 'x' ? 1.35 : .06, .12, f.a === 'x' ? .06 : 1.35, [.25, .26, .27], 22);
+        for (let i = 0; i < nb; i++) { const u = f.L0 + pas * (i + .5); if (e === 0) { let pres = false; for (const h of B.halls) { const hu = h.at, cote = h.cote; if (((cote === 'S' && f.n[1] === 1) || (cote === 'N' && f.n[1] === -1) || (cote === 'E' && f.n[0] === 1) || (cote === 'W' && f.n[0] === -1)) && Math.abs(u - hu) < h.w / 2 + 1.6) pres = true; } if (pres) continue; if (i % 3 === 1) { const xo = f.a === 'x' ? u : f.c + f.n[0] * .05, zo = f.a === 'x' ? f.c + f.n[1] * .05 : u; box(xo, 0, zo, f.a === 'x' ? 1.15 : .1, 2.15, f.a === 'x' ? .1 : 1.15, [.32, .34, .36], 22); box(f.a === 'x' ? xo : xo + f.n[0] * .03, 2.15, f.a === 'x' ? zo + f.n[1] * .03 : zo, f.a === 'x' ? 1.35 : .06, .12, f.a === 'x' ? .06 : 1.35, [.25, .26, .27], 22); B._nPorte = (B._nPorte || 0) + 1; texQuad(texPlaqueNum(String(B._nPorte)), f.a === 'x' ? u : f.c + f.n[0] * .2, 2.5, f.a === 'x' ? f.c + f.n[1] * .2 : u, f.n[0], f.n[1], .6, .34, { dist: 90 });   // v24 : numéro au-dessus de chaque porte de façade
             if (((u * 7 + f.c * 3) | 0) % 3 === 0 && TAGN < 26) { TAGN++; texQuad(texTag((u * 13 + f.c) | 0), f.a === 'x' ? u + pas * .5 : f.c + f.n[0] * .06, 1.3, f.a === 'x' ? f.c + f.n[1] * .06 : u + pas * .5, f.n[0], f.n[1], 2.4, 1.2, { alpha: true, dist: 45 }); } continue; } }
           const off = .03, x = f.a === 'x' ? u : f.c + f.n[0] * off, z = f.a === 'x' ? f.c + f.n[1] * off : u;
           { const fw = e === 0 ? 1.2 : 1.35, fh = e === 0 ? 1.0 : 1.45; vquad(f.a === 'x' ? u : f.c + f.n[0] * .015, y, f.a === 'x' ? f.c + f.n[1] * .015 : u, f.n[0], f.n[1], fw + .16, fh + .16, [.2, .2, .21], 10);
@@ -5636,10 +5636,16 @@ function construireMonde(A) {
     { const p = P(0, -.08); texQuad(texEnseigne('HALL ' + h.id, '#1c2a44', '#f2f2f2', B.nom.toUpperCase()), p[0], RDC + .25, p[1], -inV[0], -inV[1], 1.6, .4, { dist: 60 }); }
     { const AD = { A1: [2, 'allée Marcel-Pagnol'], A2: [4, 'allée Marcel-Pagnol'], B: [1, 'place du Mistral'], C1: [7, 'rue de la Garrigue'], C2: [9, 'rue de la Garrigue'], D1: [3, 'allée des Oliviers'], D2: [5, 'allée des Oliviers'], E: [11, 'rue du Santon'] }[h.id] || [1, ''];
       const tn = texCanvas(160, 120, (g, W2, H2) => { g.fillStyle = '#1b3c7a'; g.fillRect(0, 0, W2, H2); g.strokeStyle = '#e9edf2'; g.lineWidth = 6; g.strokeRect(6, 6, W2 - 12, H2 - 12); g.fillStyle = '#f2f4f7'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 64px Georgia,serif'; g.fillText(String(AD[0]), W2 / 2, 56); g.font = '600 15px Georgia,serif'; g.fillText(AD[1], W2 / 2, 100); });
-      const q = P(-1.45, -.09); texQuad(tn, q[0], RDC + .25, q[1], -inV[0], -inV[1], .46, .34, { dist: 40, rough: .35 }); h.adresse = AD[0] + ' ' + AD[1]; }
+      const q = P(-1.45, -.09); texQuad(tn, q[0], RDC + .25, q[1], -inV[0], -inV[1], .46, .34, { dist: 40, rough: .35 }); h.adresse = AD[0] + ' ' + AD[1];
+      const q2 = P(0, -.1); texQuad(texPlaqueNum(String(AD[0])), q2[0], 2.72, q2[1], -inV[0], -inV[1], .5, .28, { dist: 60 }); }   // v23 : numéro au-dessus de la porte du hall
     { const p = P(-w / 2 + .07, d * .78); texQuad(texTag(h.id.charCodeAt(0) * 7 + h.id.length), p[0], 1.6, p[1], rV[0], rV[1], 2.2, 1.1, { alpha: true, dist: 40 }); }
     { const p = P(w / 2 - .07, d * .3); texQuad(texTag(h.id.charCodeAt(1 % h.id.length) * 13 + 3), p[0], 1.7, p[1], -rV[0], -rV[1], 2.0, 1.0, { alpha: true, dist: 40 }); }
     { const p = P(-w / 2 - 1.6, -.05); texQuad(texTag(h.id.length * 31 + B.etages), p[0], 1.4, p[1], -inV[0], -inV[1], 2.3, 1.15, { alpha: true, dist: 50 }); }
+    // v21 : numéro de hall en grand à gauche de l'entrée, et nom du bâtiment au-dessus du hall
+    { const tnum = texCanvas(256, 256, (g, W2, H2) => { g.fillStyle = '#16233d'; g.fillRect(0, 0, W2, H2); g.strokeStyle = '#f2f4f7'; g.lineWidth = 10; g.strokeRect(9, 9, W2 - 18, H2 - 18); g.fillStyle = '#f2f4f7'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '600 40px "Barlow Condensed","Arial Narrow",sans-serif'; g.fillText('HALL', W2 / 2, 52); g.font = '800 150px "Barlow Condensed","Arial Narrow",sans-serif'; g.fillText(h.id, W2 / 2, 150); });
+      const q = P(-w / 2 - .62, -.08); texQuad(tnum, q[0], 2.05, q[1], -inV[0], -inV[1], .9, .9, { dist: 90 }); }
+    { const p = P(0, -.1), pc = B.panneau || [.2, .3, .45], hex = v => ('0' + Math.round(Math.min(1, v) * 255).toString(16)).slice(-2), fond = '#' + hex(pc[0] * .8) + hex(pc[1] * .8) + hex(pc[2] * .8);
+      texQuad(texEnseigne(B.nom.toUpperCase(), fond, '#f4f1ea', 'Résidence · Cité Marcel-Pagnol'), p[0], RDC + 1.45, p[1], -inV[0], -inV[1], 4.2, 1.05, { dist: 140 }); }
     // collision : pilier du cadre (porte ouverte : passage de 2,4 m)
     { const a = P(-w / 2, -.08), b = P(-w / 2 + .35, .08); coll(a[0], b[0], a[1], b[1]); const c = P(w / 2 - .35, -.08), e = P(w / 2, .08); coll(c[0], e[0], c[1], e[1]);
       for (const sg of [-1, 1]) { const fa = P(sg * 1.18, -.07), fb = P(sg * 2.45, .07); coll(fa[0], fb[0], fa[1], fb[1], 2.5, { vitre: true }); const la = P(sg * 1.16, .05), lb = P(sg * 1.24, 1.06); coll(la[0], lb[0], la[1], lb[1], 2.3, { vitre: true }); }
@@ -5665,14 +5671,14 @@ function construireMonde(A) {
     box((x0 + x1) / 2, h, (z0 + z1) / 2, x1 - x0 + .3, .5, z1 - z0 + .3, [.5, .49, .47], 21);
     const SH = [{ t: 'ALIMENTATION', s: 'OUVERT 7J/7', f: '#1f6b3a', e: '#fff', ouvert: true }, { t: 'KEBAB LE SOLEIL', s: 'SANDWICHS · TACOS', f: '#b8261a', e: '#ffe9a8', ouvert: true }, { t: 'TABAC PRESSE', s: 'LOTO · JOURNAUX', f: '#1d3f8a', e: '#ffcf3a', ouvert: false, carotte: true }, { t: 'PHARMACIE', s: 'DE LA CITÉ', f: '#1d7a3e', e: '#fff', ouvert: false, croix: true }];
     W.SHOPS = [];
-    SH.forEach((s, i) => { const cx = x0 + 9 + i * 18; texQuad(texEnseigne(s.t, s.f, s.e, s.s), cx, 3.55, z1 + .06, 0, 1, 7, 1.4, { dist: 90 });
+    SH.forEach((s, i) => { const cx = x0 + 9 + i * 18; texQuad(texEnseigne(s.t, s.f, s.e, s.s), cx, 3.55, z1 + .06, 0, 1, 7, 1.4, { dist: 90 }); texQuad(texPlaqueNum(String(12 + i * 2)), cx - 3.9, 2.72, z1 + .24, 0, 1, .44, .25, { dist: 60 });   // v23 : numéro du commerce
       if (s.ouvert) { vquad(cx, 1.5, z1 + .04, 0, 1, 6.5, 2.6, [1.5, 1.32, 1.0], 8); vquad(cx, 1.5, z1 + .07, 0, 1, 6.6, 2.7, [.5, .5, .5], 3); }
       else { box(cx, 0, z1 + .1, 6.8, 2.9, .1, [.5, .51, .52], 22); for (let k = 0; k < 9; k++) box(cx, .2 + k * .3, z1 + .17, 6.8, .03, .03, [.36, .37, .38], 22); texQuad(texTag(i * 17 + 5), cx + rnd(-1.5, 1.5), 1.3, z1 + .2, 0, 1, 2.4, 1.2, { alpha: true, dist: 40 }); }
       if (s.croix) { box(cx + 4.6, 2.6, z1 + .55, .9, .3, .12, [.25, 2.6, .6], 8); box(cx + 4.6, 2.3, z1 + .55, .3, .9, .12, [.25, 2.6, .6], 8); box(cx + 4.6, 3.2, z1 + .3, .06, .06, .5, COUL.acier, 22); }
       if (s.carotte) { m.add(GEO.roundBox(.55, .55, .12, 0), M3.mul(M3.translate(cx - 4.6, 3.1, z1 + .5), M3.rotZ(PI / 4)), [2.4, .25, .15], 8); box(cx - 4.6, 3.5, z1 + .3, .06, .06, .5, COUL.acier, 22); }
       W.SHOPS.push({ x: cx, z: z1 + 1.5, nom: s.t, ouvert: s.ouvert }); }); }
   // dos des commerces côté cité : portes de service, fenêtres grillagées, climatiseurs, descentes d'eaux pluviales, tags
-  for (let i = 0; i < 4; i++) { const cx = -34 + 9 + i * 18; box(cx - 4, 0, 55.95, 1.1, 2.1, .1, [.3, .32, .34], 22); box(cx - 4, 2.1, 55.92, 1.3, .1, .08, [.22, .23, .24], 22);
+  for (let i = 0; i < 4; i++) { const cx = -34 + 9 + i * 18; box(cx - 4, 0, 55.95, 1.1, 2.1, .1, [.3, .32, .34], 22); box(cx - 4, 2.1, 55.92, 1.3, .1, .08, [.22, .23, .24], 22); texQuad(texPlaqueNum(String(2 + i * 2) + ' bis'), cx - 4, 2.42, 55.89, 0, -1, .5, .26, { dist: 50 });   // v23 : numéro de la porte de service
     box(cx + 2, 1.6, 55.97, 1.4, .9, .06, [.15, .16, .17], 10); for (let k = 0; k < 6; k++) box(cx + 1.4 + k * .24, 1.6, 55.9, .03, .9, .03, [.4, .41, .42], 22);
     box(cx + 5.5, 2.7, 55.75, .8, .55, .45, [.78, .78, .76], 22); box(cx + 5.5, 2.7, 55.5, .5, .4, .02, [.3, .3, .3], 10); box(cx + 8.4, 0, 55.92, .1, 4.2, .1, [.42, .44, .46], 22);
     if (i !== 2) texQuad(texTag(i * 29 + 11), cx - 1, 1.3, 55.93, 0, -1, 2.4, 1.2, { alpha: true, dist: 45 }); }
@@ -5760,7 +5766,8 @@ function construireMonde(A) {
     // poste de police de quartier (ancienne maison de quartier) : accueil, salle de fouille, 3 cellules de garde à vue (2 places chacune)
     { const x0 = 82, x1 = 96, z0 = 36, z1 = 48, h = 4.2, zc = (z0 + z1) / 2, MUR = [.74, .72, .68], MURi = [.7, .7, .68], SOL = [.62, .64, .66], ALU = [.62, .64, .66];
       const mur = (ax, az, bx2, bz, col = MUR, hh = h) => { const L = Math.hypot(bx2 - ax, bz - az); if (L < .05) return; const hx = Math.abs(bz - az) < 1e-3; box((ax + bx2) / 2, 0, (az + bz) / 2, hx ? L : .2, hh, hx ? .2 : L, col, 21); coll(Math.min(ax, bx2) - (hx ? 0 : .1), Math.max(ax, bx2) + (hx ? 0 : .1), Math.min(az, bz) - (hx ? .1 : 0), Math.max(az, bz) + (hx ? .1 : 0), hh); };
-      sol(x0, z0, x1, z1, .03, SOL, 21); box((x0 + x1) / 2, h, zc, x1 - x0 + .4, .3, z1 - z0 + .4, [.55, .55, .56], 21);
+      sol(x0, z0, x1, z1, .065, SOL, 21); box((x0 + x1) / 2, h, zc, x1 - x0 + .4, .3, z1 - z0 + .4, [.55, .55, .56], 21);   // v23 : sol à .065 (l'esplanade est à .03 : plus de scintillement)
+      texQuad(texPlaqueNum('1'), x0 - .09, 2.72, zc - .45, -1, 0, .44, .25, { dist: 50 });   // v23 : numéro au-dessus de la porte du poste
       // façade ouest (entrée vitrée au centre), autres murs
       mur(x0, z0, x0, zc - .9); mur(x0, zc + .9, x0, z1); box(x0, 2.4, zc, .2, h - 2.4, 1.8, MUR, 21); mur(x0, z0, x1, z0); mur(x0, z1, x1, z1); mur(x1, z0, x1, z1);
       box(x0 - .02, 0, zc - .45, .06, 2.4, .85, [.2, .3, .36], 0); for (const zz of [zc - .9, zc, zc + .9]) box(x0 - .03, 0, zz, .08, 2.4, .06, ALU, 22);   // porte vitrée (battant gauche ouvert)
@@ -5873,6 +5880,7 @@ function construireMonde(A) {
       sol(bx0, bz0, bx1, bz1, .04, [.7, .68, .64], 21); mur(bx0, bz0, bx1, bz0); mur(bx1, bz0, bx1, bz1); mur(bx0, bz0, bx0, bz1); mur(bx0, bz1, ex0, bz1); mur(ex1, bz1, bx1, bz1); box((ex0 + ex1) / 2, 2.8, bz1, ex1 - ex0, h - 2.8, .25, MB, 25);
       box((bx0 + bx1) / 2, h, (bz0 + bz1) / 2, bx1 - bx0 + .8, .35, bz1 - bz0 + .8, [.32, .33, .35], 22); box((bx0 + bx1) / 2, 2.85, bz1 + 1.1, ex1 - ex0 + 2.4, .15, 2.2, [.25, .27, .3], 22);   // toit, marquise
       for (const xx of [ex0, (ex0 + ex1) / 2, ex1]) box(xx, 0, bz1 + .02, .08, 2.8, .1, [.62, .64, .66], 22); box(ex0 + .85, 0, bz1 - .4, .05, 2.6, .9, [.22, .32, .38], 0);   // portes vitrées (un battant ouvert)
+      texQuad(texPlaqueNum('1'), (ex0 + ex1) / 2 + .55, 2.55, bz1 + .09, 0, 1, .44, .25, { dist: 60 });   // v23 : numéro de la gare
       for (const xx of [105.8, 112.4]) box(xx, 1.0, bz1 + .01, 1.6, 1.9, .06, [.2, .3, .36], 0);
       for (const zz of [41, 47]) { box(bx1 + .01, 1.0, zz, .06, 1.9, 2.2, [.2, .3, .36], 0); box(bx0 - .01, 2.6, zz, .06, 1.6, 2.2, [.2, .3, .36], 0); }
       // guichet, distributeurs de titres, valideurs, bancs, tableau des départs
@@ -6033,6 +6041,9 @@ function dessinerCarte(cv, cx, cz, rayon, rot, opts = {}) { const g = cv.getCont
 // ================================================================= g2b — intérieurs d'appartements (4 types de logement), paliers, portes
 // Construits une fois loin de la cité (z ≈ 300, hors de vue) ; chaque logement de la cité y est « projeté » quand on y entre.
 const APV = []; // variantes d'intérieur
+function texPlaqueNum(txt) { return texCanvas(128, 72, (g, w, h) => { g.fillStyle = '#e9e4d6'; g.fillRect(0, 0, w, h); g.strokeStyle = '#6b655a'; g.lineWidth = 4; g.strokeRect(3, 3, w - 6, h - 6); g.fillStyle = '#1d1d1f'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 48px Georgia,serif'; g.fillText(txt, w / 2, h / 2 + 2); }); }
+const PLAQUE_TEX = new Map(); function plaqueTex(num) { let t = PLAQUE_TEX.get(num); if (!t && APP) { t = APP.R.texture(texPlaqueNum(String(num)), { repeat: false }); PLAQUE_TEX.set(num, t); } return t; }
+function numeroLog(lg) { return lg.etage * 10 + POS_LOG.indexOf(lg.pos) + 1; }
 const AP_Z = 300, AP_H = 2.55;
 function construireAppartements(A) {
   const m = GEO.mergerLots(48, 30000), mk = a => A.R.makeMesh(a);
@@ -6047,7 +6058,7 @@ function construireAppartements(A) {
   const texTV = texCanvas(128, 72, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#2a5fb0'); gr.addColorStop(1, '#0e2a52'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.font = 'bold 14px sans-serif'; g.fillText('JT 20H', 8, 22); g.fillStyle = '#c33'; g.fillRect(0, h - 14, w, 14); g.fillStyle = '#fff'; g.font = '10px sans-serif'; g.fillText('FLASH INFO · MÉTÉO', 6, h - 4); });
   const TEXC = new Map(), texGL = c => { let t = TEXC.get(c); if (!t) { t = A.R.texture(c, { repeat: false }); TEXC.set(c, t); } return t; };
   const texQuad = (tex, cx, cy, cz, nx, nz, w, h, mat = 30) => { const rx = nz, rz = -nx, a = [], V = (u, v) => a.push(cx + rx * (u - .5) * w, cy + (.5 - v) * h, cz + rz * (u - .5) * w, nx, 0, nz, u, v);
-    V(0, 0); V(0, 1); V(1, 1); V(0, 0); V(1, 1); V(1, 0); const nd = new F.Node('apTex'); nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: texGL(tex), rough: .6 }), null, [1, 1, 1], mat, { cast: false }); nd.pickable = false; A.add(nd); };
+    V(0, 0); V(0, 1); V(1, 1); V(0, 0); V(1, 1); V(1, 0); const nd = new F.Node('apTex'); nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: texGL(tex), rough: .6 }), null, [1, 1, 1], mat, { cast: false }); nd.pickable = false; A.add(nd); return nd; };
   TYPES.forEach((T, iv) => { const ox = -150 + iv * 100, oz = AP_Z, V = { T, ox, oz, i: iv };
     const L = (u, v) => [ox + u, oz + v];   // repère local → monde
     const box = (u, y, v, w, h, d, col, mat = 21) => m.add(GEO.roundBox(w, h, d, 0), M3.translate(ox + u, y + h / 2, oz + v), col, mat);
@@ -6104,6 +6115,9 @@ function construireAppartements(A) {
     box(3.0, 1.35, -3.32, .1, .14, .03, [.9, .9, .85], 0); box(4.2, AP_H - .08, -1.7, .35, .05, .35, [2.2, 2.1, 1.8], 8);
     for (const [u, w, y, h] of [[3.24, .1, 0, 2.12], [4.36, .1, 0, 2.12], [3.8, 1.22, 2.05, .08]]) box(u, y, -.08, w, h, .05, [.18, .14, .1], 13);  // chambranle
     box(3.8, .01, -.5, .9, .015, .55, [.28, .2, .14], 12); box(4.55, 1.45, -.06, .08, .08, .02, [.85, .8, .6], 22); box(4.75, 1.55, -.08, .26, .08, .02, [.85, .82, .7], 22);  // paillasson, sonnette, plaque
+    // v22 : numéros au-dessus des quatre portes du palier (texture remplacée à l'entrée dans le logement, voir monterVers)
+    { const pl = texPlaqueNum('00'); const a = L(3.8, -.11), b = L(1.26, -1.6), c = L(7.14, -1.6), d = L(6.3, -3.23);
+      V.plaques = [texQuad(pl, a[0], 2.3, a[1], 0, -1, .36, .2), texQuad(pl, b[0], 2.25, b[1], 1, 0, .36, .2), texQuad(pl, c[0], 2.25, c[1], -1, 0, .36, .2), texQuad(pl, d[0], 2.3, d[1], 0, 1, .36, .2)]; }
     APV.push(V);
     // porte d'entrée (dynamique) : pivote autour du gond (u = 3,3)
     const nd = new F.Node('porteAppart'); nd.addPart(mk(GEO.roundBox(.98, 2.04, .06, 0)), null, [.42, .3, .2], 13, { cast: false }); const pg = new F.Node('poignee'); pg.addPart(mk(GEO.roundBox(.12, .03, .05, 0)), null, [.75, .7, .5], 22, { cast: false });
@@ -6558,7 +6572,7 @@ function majPNJ(dt, A) {
     n.ch.pos[0] = n.x; n.ch.pos[1] = n.yOff !== undefined ? n.yOff : (n.x > 104 && W.solH ? W.solH(n.x, n.z) : n.lg || n.z > 200 ? 0 : hSol(n.x, n.z)); n.ch.pos[2] = n.z; n.ch.yaw = n.yaw;
     // visibilité (budget GPU : distance et champ de vision)
     const dE = Math.hypot(n.x - CAM.x, n.z - CAM.z); n.dE = dE; n.vis = dE < (self.__devWall ? 170 : DIST_VIS) && (dE < 3 || !JOE.fr || M3.sphereVisible(JOE.fr, n.x, .95, n.z, 1.3));
-    n.ch.extraProps = n.props; if (n.menotte && !n.couche && (n.vis || n.dE < 30)) poseMainsDos(n.ch, dt); else if (n.vis) n.ch.update(dt); else n.ch.tick(dt); } }
+    n.ch.extraProps = n.props; if (n.menotte && !n.couche && (n.vis || n.dE < 30)) poseMainsDos(n.ch, dt); else { n.ch.tick(dt); if (n.anim === 'Victory') { const pl = n.ch.player, h = n.ch.pack.joeSkel.byName.Hips; pl.T[h * 3] = 0; pl.T[h * 3 + 1] = .92; pl.T[h * 3 + 2] = 0; }   /* v20 : mains en l'air = clip Victory sans ses sauts (bassin figé à sa hauteur de repos) */ if (n.vis) n.ch.pose(); } } }
 function jouer(n, clip) { n.anim1 = clip; n.anim1Nouveau = true; }
 function dire(n, txt, opts = {}) { n.parleT = Math.max(n.parleT, 1.6 + txt.length * .045); if (n.dE === undefined || n.dE < 30 || opts.loin) { parler(txt, n.voix, opts.prio); sousTitre((n.estCollegue ? 'Brig.-chef ' + PART.nom : n.idConnue ? n.idConnue.prenom : n.connu ? n.prenom : n.role === 'renfort' ? 'Police secours' : roleNom(n)) , txt); } }
 function roleNom(n) { return { jeune: n.sexe === 'f' ? 'Une jeune' : 'Un jeune', dealer: 'Un jeune', guetteur: 'Guetteur', resident: n.sexe === 'f' ? 'Une habitante' : 'Un habitant', commercant: 'Épicier', gardien: 'Gardien', victime: 'Victime', agresseur: 'Individu', forcene: 'Individu', tireur: 'Individu armé', client: 'Un client', samu: 'SAMU', accueil: 'Agent d’accueil (poste)', detenu: 'Gardé à vue', renfort: n.sexe === 'f' ? 'Gardienne de la paix (police secours)' : 'Gardien de la paix (police secours)', collegue: 'Brig.-chef Delattre' }[n.role] || 'Individu'; }
@@ -7435,7 +7449,7 @@ function initLogements() { LOGEMENTS.length = 0;
       const v = type === 'seul' || (type === 'retraites' && M.length === 1) ? 0 : type === 'couple' || type === 'retraites' ? 1 : M.length >= 5 ? 3 : 2;
       LOGEMENTS.push({ id, H, etage: e, pos: POS_LOG[p], type, nom, M, v, temper: pk(['coop', 'calme', 'coop', 'habitue', 'nerveux', 'insolent', 'apeure']) }); } } }
 function nomFoyer(lg) { return lg.type === 'famille' || lg.type === 'monoparentale' ? 'Famille ' + lg.nom : lg.type === 'couple' ? 'M. et Mme ' + lg.nom : lg.type === 'retraites' ? (lg.M.length > 1 ? 'M. et Mme ' : (lg.M[0].sexe === 'f' ? 'Mme ' : 'M. ')) + lg.nom : (lg.M[0].sexe === 'f' ? 'Mme ' : 'M. ') + lg.M[0].prenom[0] + '. ' + lg.nom; }
-function adresseLog(lg) { return lg.H.bat + ', ' + lg.H.nom + ', ' + (lg.etage === 1 ? '1er' : lg.etage + 'e') + ' ' + lg.pos; }
+function adresseLog(lg) { return lg.H.bat + ', ' + lg.H.nom + ', ' + (lg.etage === 1 ? '1er' : lg.etage + 'e') + ' ' + lg.pos + ' (n° ' + numeroLog(lg) + ')'; }
 function logParId(id) { return LOGEMENTS.find(l => l.id === id); }
 const etagesTxt = e => e === 1 ? '1er étage' : e + 'e étage';
 
@@ -7447,6 +7461,7 @@ function liftPos(H) { return H.P(0, H.d - .9); }
 function monterVers(lg) { UI.fermerDlg(); const V = APV[lg.v]; if (!V) return; fondu(() => {
     APP_ETAT.retour = { x: CAM.x, z: CAM.z, a: CAM.a, H: lg.H }; APP_ETAT.lg = lg; APP_ETAT.V = V; APP_ETAT.dedans = false; APP_ETAT.accord = false; APP_ETAT.cris = 0; APP_ETAT.repondu = false;
     V.porte.cible = 0; V.porte.ouv = 0; V.majPorte(1);
+    if (V.plaques) { const p0 = POS_LOG.indexOf(lg.pos), autres = [0, 1, 2, 3].filter(i => i !== p0); [p0, ...autres].forEach((pi, k) => { const t = plaqueTex(lg.etage * 10 + pi + 1), nd = V.plaques[k]; if (t && nd && nd.parts[0]) nd.parts[0].mesh.tex = t; }); }   // v22 : numéros des portes du palier
     CAM.x = V.pts.palier[0]; CAM.z = V.pts.palier[1]; CAM.a = PI; CAM.p = 0; CAM.vx = CAM.vz = 0;
     if (PART) { PART.x = CAM.x + 1.2; PART.z = CAM.z - .9; arreter(PART); }
     peuplerLogement(lg, V); objectif(lg.ev && !lg.ev.fini ? lg.ev.objectif : lg.mandat && !lg.mandat.fait ? 'Mandat — ' + lg.mandat.prenom + ' ' + lg.mandat.nom + ' : frappez et annoncez-vous.' : '');
@@ -7894,7 +7909,7 @@ function icone(k) { const P = { main: 'M8 20V9a2 2 0 014 0v6V5a2 2 0 014 0v10V7a
 // ---------------------------------------------------------------- écrans : titre, création, charger, pause
 function resumeSlot(i) { const s = SAVE.lire(i); if (!s) return null; return s; }
 function ecranTitre() { UI.titre = true; $('marqs').innerHTML = ''; MQ.length = 0; voixStop(); $('hud').hidden = true; $('tc').hidden = true; for (const k in VM.nodes) VM.nodes[k].visible = false; const d = SAVE.dernier();
-  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 19</p>' +
+  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 32</p>' +
     (d ? '<button class="mbtn prim" id="t1">Continuer<small>' + esc(SAVE.lire(d).joueur.prenom + ' ' + SAVE.lire(d).joueur.nom) + ' · ' + GRADES[gradeDe(SAVE.lire(d).xp)].n + '</small></button>' : '') +
     '<button class="mbtn ' + (d ? '' : 'prim') + '" id="t2">Nouvelle carrière</button><button class="mbtn" id="t3">Charger une partie</button><button class="mbtn" id="t4">Commandes</button><button class="mbtn" id="t5">Mémo : la procédure</button><button class="mbtn" id="t6">Options</button>' +
     '<p class="note" style="margin-top:14px">Jeu de simulation. Personnages, lieux et faits sont fictifs. Les règles de procédure s’inspirent du droit français (code de procédure pénale, code de la sécurité intérieure, code de déontologie).</p>', P => {
@@ -8763,7 +8778,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '18'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '32'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -8863,6 +8878,88 @@ function epurerDialogue(o, n, rendu) { if (o._brut || (self.__TEST_NORENDER && !
   if (ouvert) { const i = L.findIndex(c => c._cat === ouvert); if (i >= 0) { DLG.sel = i; UI.sel(0); } } return true; }
 self.epurerDialogue = epurerDialogue;
 
+
+// ================================================================= g7m — city stade : deux mâts de projecteurs allumés la nuit, match de foot à 5 (3 contre 2), buts alternés
+const FOOT = { ok: false, j: [], ballon: null, mats: null, b: { x: 75, z: -9, vx: 0, vz: 0, y: .12, vy: 0 }, porteur: null, equipe: 0, score: [0, 0], phase: 'jeu', t: 0, passeT: 0, respawnT: 0 };
+const FOOT_X0 = 61, FOOT_X1 = 89, FOOT_Z0 = -23, FOOT_Z1 = 5, FOOT_ZF0 = -23.75, FOOT_ZF1 = 5.75, FOOT_MATS = [[58.6, -9], [91.4, -9]];
+function footBut(eq) { return [75, eq === 0 ? FOOT_Z1 - 1 : FOOT_Z0 + 1]; }   // l'équipe 0 attaque le but nord, l'équipe 1 le but sud
+function construireStadeNuit(A) { if (FOOT.mats) return; const mk = a => A.R.makeMesh(a), m = GEO.merger(), b = (x, y, z, w, h, d, col, mat = 22) => m.add(GEO.roundBox(w, h, d, 0), M3.translate(x, y + h / 2, z), col, mat);
+  for (const [x, z] of FOOT_MATS) { const s = x < 75 ? 1 : -1; b(x, 0, z, .34, 9.2, .34, [.3, .32, .34]); b(x, 9.2, z, 1.9, .55, .5, [.22, .23, .25]); for (const dz of [-.6, 0, .6]) b(x + s * .28, 9.25, z + dz, .1, .42, .5, [2.6, 2.6, 2.3], 8); b(x, 2.2, z, .5, .3, .5, [.4, .42, .44]); }
+  const nd = new F.Node('stade-projecteurs'); for (const p of m.build(mk)) nd.addPart(p.mesh, null, p.color, p.mat, { cast: false }); nd.pickable = false; A.add(nd); FOOT.mats = nd;
+  const bn = new F.Node('ballon'); bn.addPart(mk(GEO.roundBox(.24, .24, .24, .1)), null, [.96, .96, .96], 22); bn.pickable = false; A.add(bn); FOOT.ballon = bn; }
+function footOuvert() { const h = HEURE; return h >= 8 || h < 3; }   // v30 : match de 8 h à 3 h du matin (les projecteurs servent)
+function assurerFoot(A) { if (!S || !W.SPOTS || !W.SPOTS.stade) return; construireStadeNuit(A); FOOT.j = FOOT.j.filter(n => !n.cache); if (!footOuvert() || FOOT.j.length >= 7) return;
+  FOOT.respawnT -= 1 / 60; if (FOOT.respawnT > 0) return; FOOT.respawnT = 2;
+  const gardiens = FOOT.j.filter(n => n.footG !== undefined), champ = FOOT.j.filter(n => n.footG === undefined); const goal = gardiens.length < 2 ? (gardiens.some(g => g.footG === 0) ? 1 : 0) : -1;
+  const eq = goal >= 0 ? (goal === 0 ? 1 : 0) : champ.filter(n => n.foot === 0).length < 3 ? 0 : 1; const n = creerPNJ(A, { role: 'jeune', x: goal >= 0 ? 75 : 75 + rnd(-6, 6), z: goal >= 0 ? (goal === 0 ? FOOT_Z1 - .7 : FOOT_Z0 + .7) : -9 + (eq ? 5 : -5) + rnd(-3, 3), ageMin: 13, ageMax: 19, doc: chance(.5) ? 'cni' : null });
+  n.foot = eq; if (goal >= 0) n.footG = goal; /* v28 : gardien du but 0 (nord, z1) ou 1 (sud, z0) */ n.balade = false; n.zone = null; n.obj.couteau = false; n.obj.coke = 0; n.perso.coop = rnd(.5, .95); n.perso.hostile = rnd(0, .2); FOOT.j.push(n); }
+function footVa(n, x, z, courir) { x = clamp(x, FOOT_X0 + .6, FOOT_X1 - .6); z = clamp(z, FOOT_Z0 + .6, FOOT_Z1 - .6); const d = Math.hypot(x - n.x, z - n.z); if (d < .45) { if (n.chem) arreter(n); n.regard = [FOOT.b.x, FOOT.b.z]; return; }
+  n.chem = [[x, z]]; n.dest = [x, z]; n.finChem = null; n.courir = !!courir; n.vmax = courir ? 4.3 : 1.7; n.regard = null; if (n.anim1 && n.anim1 !== 'Kick') n.anim1 = null; n.clipFixe = null; n.mise = false; }   // v27 : un clip de célébration en boucle (Victory…) resté en anim1 figeait les jambes pendant la course
+function majFoot(dt, A) { if (!S || UI.titre || !A) return; assurerFoot(A); const Fo = FOOT, B = Fo.b; if (!Fo.ballon) return;
+  const nt = nuit(); if (nt > .3 && Math.hypot(CAM.x - 75, CAM.z + 9) < 120) for (const [x, z] of FOOT_MATS) A.addLight({ p: [x + (x < 75 ? 1.4 : -1.4), 8.9, z], c: [.92, .95, 1], i: 85 * Math.min(1, nt), r: 34 });
+  const ouvert = footOuvert(); Fo.ballon.visible = ouvert; if (!ouvert) { for (const n of Fo.j) if (!n.balade) { n.balade = true; n.zone = [75, -9, 12]; } return; }
+  for (const n of Fo.j) if (n.balade) { n.balade = false; n.zone = null; }
+  const actifs = Fo.j.filter(n => n.etat === 'libre' && !n.menotte && !n.couche && !(DLG.o && DLG.n === n) && !(PROC.ctl && PROC.ctl.n === n) && now() > (n.retenuJusqua || 0) && Math.hypot(n.x - 75, n.z + 9) < 24);
+  // ballon : roulement, rebonds sur la clôture
+  B.x += B.vx * dt; B.z += B.vz * dt; const fr = Math.max(0, 1 - 1.3 * dt); B.vx *= fr; B.vz *= fr; if (B.y > .12 || B.vy > 0) { B.vy -= 9.8 * dt; B.y += B.vy * dt; if (B.y <= .12) { B.y = .12; B.vy = B.vy < -1.5 ? -B.vy * .35 : 0; } }
+  if (B.x < FOOT_X0 + .3) { B.x = FOOT_X0 + .3; B.vx = Math.abs(B.vx) * .5; } if (B.x > FOOT_X1 - .3) { B.x = FOOT_X1 - .3; B.vx = -Math.abs(B.vx) * .5; }
+  const dansBut = Math.abs(B.x - 75) < 2 && B.y < 1.9; if (B.z < (dansBut ? FOOT_ZF0 : FOOT_Z0 + .3)) { B.z = dansBut ? FOOT_ZF0 : FOOT_Z0 + .3; B.vz = Math.abs(B.vz) * (dansBut ? .15 : .5); } if (B.z > (dansBut ? FOOT_ZF1 : FOOT_Z1 - .3)) { B.z = dansBut ? FOOT_ZF1 : FOOT_Z1 - .3; B.vz = -Math.abs(B.vz) * (dansBut ? .15 : .5); }   // v28 : entre les poteaux, le ballon passe la ligne et file au fond des filets
+  Fo.ballon.setPos(B.x, B.y, B.z); Fo.t -= dt;
+  if (actifs.length < 2) { Fo.porteur = null; return; }
+  const eq = Fo.equipe, att = actifs.filter(n => n.foot === eq && n.footG === undefined), def = actifs.filter(n => n.foot !== eq && n.footG === undefined), gard = actifs.filter(n => n.footG !== undefined), but = footBut(eq);
+  // v28 : gardiens — ils suivent le ballon sur leur ligne et plongent sur les tirs (arrêt possible, le ballon repart en jeu)
+  for (const g of gard) { const gz = g.footG === 0 ? FOOT_Z1 - .7 : FOOT_Z0 + .7, cible = clamp(B.x, 73.5, 76.5); if (Fo.phase === 'but') { if (g.chem) arreter(g); g.regard = [B.x, B.z]; continue; }
+    const versLui = Fo.phase === 'tir' && ((g.footG === 0 && B.vz > 0) || (g.footG === 1 && B.vz < 0)); if (versLui && Math.abs(B.z - gz) < 2.6 && !g._plonge) { g._plonge = true; setTimeout(() => g._plonge = false, 2500); jouer(g, chance(.5) ? 'Block' : 'Dodge_Roll'); setTimeout(() => { if (!g.cache && g.anim1 !== 'Kick') g.anim1 = null; }, 1400); if (Math.abs(B.x - g.x) < 1.1 && chance(.5)) { B.vz = -B.vz * .55; B.vx += rnd(-4, 4); B.vy = 1.5; Fo.phase = 'jeu'; dire(g, pick(['Arrêt !', 'Pas aujourd’hui !', 'Jamais !']), { loin: true }); } }
+    if (Math.abs(g.x - cible) > .35 || Math.abs(g.z - gz) > .5) footVa(g, cible, gz, Math.abs(g.x - cible) > 2); else { if (g.chem) arreter(g); g.regard = [B.x, B.z]; } }
+  if (Fo.phase === 'but') { if (Fo.t <= 0) { Fo.phase = 'jeu'; B.x = 75; B.z = -9; B.vx = B.vz = 0; B.y = .12; Fo.porteur = null; Fo.passeT = 0; for (const n of actifs) if (n.footG === undefined) footVa(n, 75 + (n.foot === eq ? rnd(-4, 4) : rnd(-5, 5)), -9 + (n.foot === eq ? 0 : 1) * 0 + (n.foot === 0 ? -1 : 1) * rnd(2.5, 6), true); } return; }
+  // but marqué ? (l'équipe qui attaque est la seule à tirer : les buts s'alternent)
+  if (Fo.phase === 'tir' && Math.abs(B.x - 75) < 2 && B.y < 1.9 && ((eq === 0 && B.z > FOOT_Z1 + .15) || (eq === 1 && B.z < FOOT_Z0 - .15))) {
+    Fo.score[eq]++; Fo.phase = 'but'; Fo.t = 6; Fo.equipe = 1 - eq; Fo.porteur = null;
+    for (const n of actifs) { if (n.chem) arreter(n); n.regard = [B.x, B.z]; } for (const n of att) jouer(n, pick(['Victory', 'Clap', 'Taunt'])); for (const n of def) jouer(n, 'Idle_LookAround');   // v29 : tout le monde s'arrête pour célébrer (plus de glissade)
+    const m = pick(att); if (m) dire(m, pick(['But !!!', 'Et c’est le but !', 'Lucarne ! Rien à dire !', 'Trop facile !', Fo.score[0] + ' à ' + Fo.score[1] + ' !']), { loin: true });
+    const d = pick(def); if (d && chance(.6)) setTimeout(() => { if (!d.cache) dire(d, pick(['Hors-jeu, c’est hors-jeu !', 'Reste sur ton gars !', 'C’est bon, on revient.', 'Vas-y, remets au centre.']), { loin: true }); }, 1200); return; }
+  if (Fo.phase === 'tir' && Math.hypot(B.vx, B.vz) < .8) { Fo.phase = 'jeu'; }   // tir manqué : le jeu reprend
+  // porteur : un attaquant au contact du ballon
+  if (Fo.porteur && (Fo.porteur.cache || !actifs.includes(Fo.porteur) || Fo.porteur.foot !== eq)) Fo.porteur = null;
+  if (!Fo.porteur && Fo.phase === 'jeu') { let best = null, bd = 1e9; for (const n of att) { const d = Math.hypot(n.x - B.x, n.z - B.z); if (d < bd) { bd = d; best = n; } } if (best && bd < 1.1 && Math.hypot(B.vx, B.vz) < 3) { Fo.porteur = best; Fo.passeT = rnd(1.2, 3); } }
+  const P = Fo.porteur;
+  if (P) { const dx = but[0] - P.x, dz = but[1] - P.z, d = Math.hypot(dx, dz) || 1, fx = dx / d, fz = dz / d; Fo.passeT -= dt;
+    footVa(P, but[0] + Math.sin(HEURE * 900 + P.x) * 3, but[1], true); B.x = P.x + fx * .75; B.z = P.z + fz * .75; B.vx = B.vz = 0; B.y = .12;
+    if (d < 7.5 && chance(dt * .38)) { const cible = [but[0] + rnd(-1.9, 1.9), but[1] + (eq === 0 ? .8 : -.8)]; const tx = cible[0] - B.x, tz = cible[1] - B.z, td = Math.hypot(tx, tz) || 1; B.vx = tx / td * 13; B.vz = tz / td * 13; B.vy = 2.2; Fo.porteur = null; Fo.phase = 'tir'; jouer(P, 'Kick'); if (chance(.4)) dire(P, pick(['Tir !', 'Allez !', 'Regarde ça !']), { loin: true }); }
+    else if (Fo.passeT <= 0 && att.length > 1) { const co = pick(att.filter(n => n !== P)); if (co) { const tx = co.x + (but[0] - co.x) * .15 - B.x, tz = co.z + (but[1] - co.z) * .15 - B.z, td = Math.hypot(tx, tz) || 1; const v = Math.min(9, 3 + td * 1.1); B.vx = tx / td * v; B.vz = tz / td * v; Fo.porteur = null; jouer(P, 'Kick'); Fo.passeT = 99; if (chance(.35)) dire(P, pick(['À toi !', 'Démarque-toi !', co.prenom + ' !']), { loin: true }); } } }
+  // les autres : attaquants en soutien, défenseurs sous pression (sans jamais récupérer le ballon : c'est ce qui fait alterner les buts)
+  for (const n of actifs) { if (n === P || n.footG !== undefined) continue;   // v29 : les gardiens ne quittent pas leur but
+    if (n.foot === eq) { if (!P) footVa(n, B.x + rnd(-.3, .3), B.z + rnd(-.3, .3), true); else { const k = att.indexOf(n), side = k % 2 ? 1 : -1; footVa(n, clamp(P.x + side * 6, FOOT_X0 + 2, FOOT_X1 - 2), P.z + (but[1] - P.z) * .45, true); } }
+    else { const k = def.indexOf(n); if (k === 0) { const dx = B.x - n.x, dz = B.z - n.z, d = Math.hypot(dx, dz) || 1; if (d > 1.6) footVa(n, B.x - dx / d * 1.4, B.z - dz / d * 1.4, true); else { if (n.chem) arreter(n); n.regard = [B.x, B.z]; } }
+      else { const g = footBut(1 - eq); footVa(n, (B.x + g[0]) / 2 + rnd(-.5, .5), (B.z + g[1]) / 2, true); } } } }
+{ const _mp = majPNJ; majPNJ = function (dt, A) { try { majFoot(dt, A); } catch (e) { console.error('foot', e); } return _mp(dt, A); }; }
+self.FOOT = FOOT;
+
+
+// ================================================================= g7n — bandes de jeunes (2-3) qui traînent devant les bâtiments : fument, discutent, souvent des stupéfiants sur eux
+const BANDES = { L: [], respawnT: 0, max: 4 };
+function bandeSpot() { const H = pick(W.HALLS); const p = H.P(rnd(-9, 9), rnd(-8, -4.5)); return navProche ? navProche(p[0], p[1]) : p; }
+function assurerBandes(A) { if (!S || !W.HALLS || !W.HALLS.length) return; for (const b of BANDES.L) b.m = b.m.filter(n => !n.cache); BANDES.L = BANDES.L.filter(b => b.m.length);
+  if (BANDES.L.length >= BANDES.max) return; BANDES.respawnT -= 1 / 60; if (BANDES.respawnT > 0) return; BANDES.respawnT = 25;
+  const h = HEURE; if (h >= 4 && h < 11) return; const sp = bandeSpot(), nb = chance(.5) ? 2 : 3, b = { m: [], cible: null, attenteT: rnd(4, 10), t0: HEURE };
+  for (let i = 0; i < nb; i++) { const n = creerPNJ(A, { role: 'jeune', x: sp[0] + rnd(-1.5, 1.5), z: sp[1] + rnd(-1.5, 1.5), ageMin: 15, ageMax: 23, doc: chance(.6) ? 'cni' : null }); profilJeune(n);
+    if (chance(.6)) n.obj.cannabis = Math.max(n.obj.cannabis || 0, rndi(1, 5)); if (chance(.2)) n.obj.resine = rndi(1, 3); if (n.obj.cannabis && chance(.6)) { n.indices = n.indices || new Set(); n.indices.add('odeur'); n.joint = true; }
+    n.balade = false; n.zone = null; n.bande = b; n.fumeT = rnd(2, 8); n.perso.coop = rnd(.2, .7); n.perso.nerf = rnd(.2, .7); b.m.push(n); } BANDES.L.push(b); }
+function majBandes(dt, A) { if (!S || UI.titre || !A) return; assurerBandes(A);
+  for (const b of BANDES.L) { const actifs = b.m.filter(n => n.etat === 'libre' && !n.menotte && !n.couche && !(DLG.o && DLG.n === n) && !(PROC.ctl && PROC.ctl.n === n) && now() > (n.retenuJusqua || 0)); if (!actifs.length) continue; const chef = actifs[0];
+    // le chef choisit un coin devant un immeuble, y traîne, puis change
+    if (!b.cible) { b.cible = bandeSpot(); allerVers(chef, b.cible[0], b.cible[1], { v: rnd(.9, 1.25), fin: () => { b.arrive = true; b.attenteT = rnd(12, 40); } }); b.arrive = false; }
+    else if (b.arrive) { b.attenteT -= dt; if (b.attenteT <= 0) { b.cible = null; b.arrive = false; } }
+    else if (!chef.chem && !b.arrive) { b.arrive = true; b.attenteT = rnd(10, 30); }
+    for (const n of actifs) { if (n.chem && n.anim1 === 'Drink') n.anim1 = null;   // v32 : le geste de la cigarette (clip en boucle) figeait les jambes en marchant
+      if (n !== chef) { const d = Math.hypot(n.x - chef.x, n.z - chef.z); if (d > 2.6 && !n.chem) allerVers(n, chef.x + rnd(-1.4, 1.4), chef.z + rnd(-1.4, 1.4), { v: 1.2 + (d > 8 ? .8 : 0) }); else if (d <= 2.6 && !n.chem) n.regard = [chef.x, chef.z]; }
+      else if (!chef.chem && actifs.length > 1) chef.regard = [actifs[1].x, actifs[1].z];
+      // cigarette / joint : geste main-bouche, bouffée de fumée, braise
+      n.fumeT -= dt; if (n.fumeT <= 0 && !n.chem && !n.anim1 && n.parleT <= 0) { n.fumeT = rnd(5, 12); jouer(n, 'Drink'); const nn = n; setTimeout(() => { if (nn.anim1 === 'Drink') nn.anim1 = null; }, 1700); setTimeout(() => { if (nn.cache || nn.etat !== 'libre') return; const fx = Math.sin(nn.yaw), fz = Math.cos(nn.yaw); for (let k = 0; k < 3; k++) A.fx.emit('smoke', [nn.x + fx * .25, 1.55 + k * .03, nn.z + fz * .25], [fx * .4 + rnd(-.15, .15), .35 + k * .1, fz * .4 + rnd(-.15, .15)], 1.6, .14 + k * .04, nn.joint ? [.72, .7, .62] : [.66, .66, .68], .2); if (nn.joint && Math.hypot(nn.x - CAM.x, nn.z - CAM.z) < 6 && chance(.5) && !S.odeurT) { S.odeurT = 1; setTimeout(() => S.odeurT = 0, 30000); radio('Observation', 'Odeur caractéristique de cannabis en passant près du groupe.', ''); } }, 900);
+        if (chance(.25) && actifs.length > 1) dire(n, pick(['T’as du feu ?', 'Passe, frère.', 'Wesh, il est quelle heure ?', 'Ils tournent encore, les keufs ?', 'Attends, je finis ma clope.', 'On monte ou quoi ?', 'Trop calme ce soir.', 'Mets un son.']), { loin: true }); } } } }
+{ const _mp = majPNJ; majPNJ = function (dt, A) { try { majBandes(dt, A); } catch (e) { console.error('bandes', e); } return _mp(dt, A); }; }
+self.BANDES = BANDES;
+
 // ================================================================= v19 — GMD : maintenir pour viser (trajectoire, point d'explosion, rayon d'effet), relâcher pour lancer
 const GVISE = { actif: false, t: 0, k: null, vise0: false, cv: null, aide: null };
 function annulerViseGMD(msg) { if (!GVISE.actif) return; GVISE.actif = false; GVISE.t = 0; if (msg) toast('Lancer annulé — grenade conservée'); dessinerViseGMD(null); }
@@ -8895,7 +8992,20 @@ Object.assign(self, { GVISE, simulerGMD });
 
 })();</script>
 </body>
-<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v18 (2 nov. 2026)
+<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v32 (2 nov. 2026)
+v32 — bandes : anim1 'Drink' effacé en marchant et après 1,7 s (jambes figées).
+v31 — g7n BANDES : jusqu'à 4 bandes de 2-3 jeunes (11 h → 4 h) qui vont de coin en coin devant les halls (bandeSpot via H.P), un chef + suiveurs, fument (anim Drink + A.fx.emit smoke, odeur radio si joint), 60 % cannabis / 20 % résine (profilJeune + ajout), n.bande.
+v30 — horaires du match 8 h → 3 h (avant : fermé dès 1 h, d'où le terrain vide la nuit) ; à la réouverture les joueurs reprennent (balade remise à false).
+v29 — match : les gardiens étaient aussi pilotés comme joueurs de champ (boucle « les autres ») → exclus ; à chaque but tout le monde s'arrête (arreter) avant la célébration (fini la glissade en Victory/Clap) ; anim1 du gardien effacé 1,4 s après le plongeon ; tirs plus rares (d < 7,5, chance dt×.38) et passes plus fréquentes. Télémétrie : /home/claude/v19/foot2.js (anomalies par seconde).
+v28 — 2 gardiens (n.footG = 0 but nord / 1 but sud, 7 PNJ au total), plongeon Block/Dodge_Roll sur les tirs avec 50 % d'arrêt quand le ballon est à moins de 1,1 m ; le ballon franchit réellement la ligne entre les poteaux (jusqu'au grillage FOOT_ZF0/ZF1), but compté au franchissement.
+v27 — footVa efface anim1 (sauf Kick), clipFixe et mise avant un déplacement : les joueurs glissaient jambes figées après une célébration (Victory boucle → anim1 jamais terminé).
+v26 — g7m (avant le bloc GMD) : city stade = 2 mâts de projecteurs (FOOT_MATS, lumières A.addLight la nuit via nuit()) + match de foot 3 contre 2 (FOOT : 5 jeunes role 'jeune' avec n.foot = équipe, ballon nœud, phases jeu/tir/but, seule l'équipe FOOT.equipe attaque → buts alternés, score FOOT.score, horaires 9 h → 1 h, respawn après repeupler). Plaques de façade : .6×.34 à .2 de la façade, dist 90.
+v25 — plaque des portes de façade décalée à .16 de la façade (elle était à .10, coplanaire avec la face de la porte (.05 + .1/2) → invisible de près).
+v24 — les « fausses portes » de façade (boucle des fenêtres de batiment(), e === 0, i % 3 === 1) reçoivent une plaque numérotée (compteur B._nPorte par bâtiment) au-dessus du linteau.
+v23 — numéros au-dessus de toutes les portes extérieures (halls : n° de rue AD[0] ; portes de service des commerces : 2/4/6/8 bis ; devantures : 12-18 ; poste : 1 ; gare : 1) via texPlaqueNum (g2b, hissée) ; sol du poste relevé à .065 (il était à .03 comme l'esplanade [-76,26,96,52] → z-fighting).
+v22 — g2b : 4 plaques numérotées au-dessus des portes du palier (V.plaques, texQuad de g2b retourne désormais le nœud) ; numéro = étage×10 + position (gauche 1, droite 2, fond gauche 3, fond droite 4) ; texture remplacée dans monterVers via plaqueTex (cache GL) ; adresseLog affiche « (n° NN) ».
+v21 — g2_world, boucle des halls (après les tags) : plaque « HALL <id> » 0,9 m à gauche de l'entrée (y 2,05) + enseigne du nom du bâtiment (texEnseigne, couleur B.panneau) au-dessus du hall à RDC + 1,45.
+v20 — mains en l'air (n.etat 'mains' → clip Victory) : le clip Victory saute ; dans majPNJ (g4_npc, juste avant jouer()), après n.ch.tick, la translation du bassin (Hips) est figée à (0, .92, 0) avant n.ch.pose → plus de sautillements. v19 reçue de l'utilisateur (hSol, GVISE, ecartH, majEvenements, injonctionPorte).
 Repères : voir NOTE_CORRECTION.md (modules g1…g7l, coordonnées, drapeaux de test). Pas de src/ dans cette session : correctifs appliqués directement dans le HTML construit ; à reporter dans src/ (g4_npc fuir, g5_proc ouvrirControle/menuControle/rendreCompteOPJ/finControle, g7g majMenottesMaintien) avant le prochain build.js.
 v18 — deux tests corrigés (219/222 → attendu 222/222) :
  1. OPJ / garde à vue : fuir() ne jetait plus le contrôle qu'en le perdant (PROC.ctl = null) ; à la recapture (menotterDirect, collegueMenotte, plaquage) ouvrirControle repartait d'un dossier vide → l'OPJ ne voyait plus le port d'arme et refusait la GAV, donc pas de notification des droits. Désormais le dossier suit le PNJ (n._ctl), ouvrirControle le reprend (infractions, FPR, identité, arme saisie, + rébellion si l'interpellation avait commencé), finControle l'efface. rendreCompteOPJ compte aussi c.saisieArme, n.indices 'arme', n.gravite ≥ 1 ; crochet de test self.__OPJ_GAV = true/false force la décision.
