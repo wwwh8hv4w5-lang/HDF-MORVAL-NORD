@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v35</title>
+<title>HDF : MORVAL-NORD v36</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -7914,7 +7914,7 @@ function icone(k) { const P = { main: 'M8 20V9a2 2 0 014 0v6V5a2 2 0 014 0v10V7a
 // ---------------------------------------------------------------- écrans : titre, création, charger, pause
 function resumeSlot(i) { const s = SAVE.lire(i); if (!s) return null; return s; }
 function ecranTitre() { UI.titre = true; $('marqs').innerHTML = ''; MQ.length = 0; voixStop(); $('hud').hidden = true; $('tc').hidden = true; for (const k in VM.nodes) VM.nodes[k].visible = false; const d = SAVE.dernier();
-  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 35</p>' +
+  UI.ecran('<p class="lbl" style="color:var(--orange)">Police nationale · Brigade anti-criminalité de nuit</p><h1 class="titre">HDF <span>: MORVAL-NORD</span></h1><p class="soustitre">BAC 75 · Cité Marcel Pagnol · Morval-Nord (ville fictive) · version 36</p>' +
     (d ? '<button class="mbtn prim" id="t1">Continuer<small>' + esc(SAVE.lire(d).joueur.prenom + ' ' + SAVE.lire(d).joueur.nom) + ' · ' + GRADES[gradeDe(SAVE.lire(d).xp)].n + '</small></button>' : '') +
     '<button class="mbtn ' + (d ? '' : 'prim') + '" id="t2">Nouvelle carrière</button><button class="mbtn" id="t3">Charger une partie</button><button class="mbtn" id="t4">Commandes</button><button class="mbtn" id="t5">Mémo : la procédure</button><button class="mbtn" id="t6">Options</button>' +
     '<p class="note" style="margin-top:14px">Jeu de simulation. Personnages, lieux et faits sont fictifs. Les règles de procédure s’inspirent du droit français (code de procédure pénale, code de la sécurité intérieure, code de déontologie).</p>', P => {
@@ -8783,7 +8783,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '35'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '36'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -8795,7 +8795,7 @@ function asseoirJoueur(s) { J.assis = s; J.accroupi = false; const p = siegeAbs(
 function seLever() { const s = J.assis; if (!s) return; J.assis = null; const p = siegeAbs(s); CAM.x = W.GARE.TX - .05; CAM.z = p[1] + s.f * .5; toast('Vous vous levez.', ''); }
 // ---- cinématique d'ouverture
 function lancerIntro() { const G = W.GARE; if (!G || !APP) return; if (!TRAIN.nd) construireTrain(APP); if (!TRAIN.nd || TRAIN.nd.erreur) throw new Error('train');
-  INTRO.actif = true; INTRO.sortis = false; S.enService = false; S.introFaite = false; J.brassard = false; J.arme = 'mains';
+  INTRO.actif = true; INTRO.sortis = false; S.enService = false; S.introFaite = false; J.brassard = false; J.arme = 'mains'; if (self.dotationCivile) dotationCivile();
   TRAIN.sens = 1; trainVers('arrivee'); TRAIN.tenir = true; TRAIN.annonce = true;
   const sp = trouverSiege(-1.14, 1.66), sieges = [trouverSiege(-1.14, 3.54), trouverSiege(.62, 3.54), trouverSiege(1.14, -1.54)];
   INTRO.pass = sieges.map((s, i) => { const p = siegeAbs(s), n = creerPNJ(APP, { role: 'resident', x: p[0], z: p[1], sexe: i === 1 ? 'f' : undefined, ancien: i === 2 }); asseoirPNJ(n, s); n.voyageur = true; return n; });
@@ -8971,6 +8971,7 @@ self.BANDES = BANDES;
 const CY = { nd: null, porte: [74.08, 42], dehors: [75.6, 42], finT: 0, popT: 0, colJour: null, avert: new Set(), confT: 0, h22: false, lastH: -1 };
 function cycle() { if (!S) return null; if (!S.cycle) S.cycle = { cles: S.introFaite !== false && S.enService !== false, premierJour: S.enService !== false ? 0 : (S.jour || 1), repasMidi: 0, repasSoir: 0, sportJour: 0, endMax: 100, reconnu: 0, liens: 0, racket: 0 }; return S.cycle; }
 function horsService() { return !!(S && S.enService === false); }
+function dotationCivile() { S.munit = { pistolet: { ch: 15, res: 0 }, taser: { ch: 0, res: 0, max: 0 }, lacry: 0, lbd: { ch: 0, res: 0 }, gmd: 0 }; if (J.arme !== 'mains' && J.arme !== 'pistolet') J.arme = 'mains'; J.brassard = false; majHudArme(); }   // v36 : hors service, seule l'arme de service (SIG 9 mm, 15 cartouches, pas de recharge)
 function heurePointage() { return HEURE >= 22.5 || HEURE < 5; }
 function popService(txt, sous, rouge) { let e = $('popService'); if (!e) { e = document.createElement('div'); e.id = 'popService'; e.style.cssText = 'position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:60;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s'; document.body.appendChild(e); }
   e.innerHTML = '<div style="font:800 clamp(28px,6vw,52px) \'Barlow Condensed\',sans-serif;letter-spacing:.12em;color:' + (rouge ? 'var(--red)' : '#ffd166') + ';text-shadow:0 2px 18px rgba(0,0,0,.8)">' + txt + '</div>' + (sous ? '<div style="font:600 clamp(14px,2.4vw,20px) \'Barlow Condensed\',sans-serif;color:#fff;letter-spacing:.08em;text-shadow:0 1px 8px #000;margin-top:6px">' + sous + '</div>' : '');
@@ -9006,7 +9007,7 @@ function finService() { if (!S || S.enService === false || CY.finEnCours) return
     { d: 3.6, titre: '06 h 00', sous: 'Fin de vacation — vous regardez votre montre.', eye: k => e0, look: k => [e0[0] + f[0] * 1.2 - f[2] * .5, 1.65 - 1.1 * Math.min(1, k * 2.5), e0[2] + f[2] * 1.2 + f[0] * .5] },
     { d: 6, titre: 'Retour au poste', sous: 'Dernière action bouclée. Direction le commissariat.', eye: k => lerp3(e0, dep, k * k * (3 - 2 * k)), look: k => pd },
     { d: 3, titre: '', sous: 'Dépôt de l’équipement au vestiaire.', eye: k => dep, look: k => pd }
-  ], () => fondu(() => { const c = cycle(); S.enService = false; S.jour = (S.jour || 1) + 1; CY.six = true; CY.lastH = 6; c.jourService = 0; J.brassard = false; J.lampe = false; J.vise = false; J.arme = 'mains'; majHudArme(); S.munit = Object.assign(S.munit || munitionsService(), { pistolet: { ch: 15, res: 0 } }); PROC.ctl = null; PROC.escorte = null; PROC.poursuite = null; for (const e of EVTS) e.fini = true;
+  ], () => fondu(() => { const c = cycle(); S.enService = false; S.jour = (S.jour || 1) + 1; CY.six = true; CY.lastH = 6; c.jourService = 0; J.brassard = false; J.lampe = false; J.vise = false; J.arme = 'mains'; majHudArme(); dotationCivile(); PROC.ctl = null; PROC.escorte = null; PROC.poursuite = null; for (const e of EVTS) e.fini = true;
     CAM.x = CY.dehors[0]; CAM.z = CY.dehors[1]; CAM.a = -PI / 2; CAM.vx = CAM.vz = 0; if (PART) placerCollegueService(); CY.finEnCours = false; popService('FIN DE SERVICE', 'Jour ' + S.jour + ' · retour à l’appartement de fonction'); majObjectifJour(); S._stats0 = Object.assign({}, S.stats); sauvegarder(false); })); }
 function majCycle(dt, A) { if (!S || UI.titre || !W.HALLS) return; const c = cycle(); construireAppartFonction(A);
   const h = HEURE, hi = Math.floor(h * 2) / 2; if (hi !== CY.lastH) { CY.lastH = hi; if (horsService() && c.cles && hi === 22.5) { popService('22 h 30', 'Prise de service : pointez à l’accueil du poste'); majObjectifJour(); } if (horsService() && hi === 12 && c.cles) toast('Midi : le kebab du Soleil vous garde un menu.', 'gold'); }
@@ -9068,7 +9069,7 @@ declarerPolice = function (n) { if (horsService()) { const c = cycle(); c.reconn
 { const _cm = ciblesMarqueurs; ciblesMarqueurs = function () { if (S && horsService() && W.POSTE && !APP_ETAT.lg) { const c = cycle(); if (!c.cles) return [{ x: W.POSTE.accueil[0], z: W.POSTE.accueil[1], t: 'Accueil du poste', sous: 'Se présenter' }]; const L = []; if (heurePointage() && (S.jour || 1) > c.premierJour) L.push({ x: W.POSTE.accueil[0], z: W.POSTE.accueil[1], t: 'Accueil du poste', sous: 'Pointer · prise de service' }); else L.push({ x: CY.dehors[0], z: CY.dehors[1], t: 'Appartement de fonction', sous: 'Dormir · s’entraîner' }); if (self.KEB && KEB.n && !KEB.n.cache && FAIM.v < 60 && repasDispo()) L.push({ x: KEB.pos[0], z: KEB.pos[1] + 2, t: 'Kebab Le Soleil', sous: 'Un menu vous attend' }); return L; } return _cm.apply(this, arguments); }; }
 { const _rd = redescendre; redescendre = function (sil) { if (APP_ETAT.lg === LOG_FONCTION) return sortirAppartFonction(); return _rd(sil); }; }
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majCycle(dt, A); } catch (e) { console.error('cycle', e); } return _mp(dt, A); }; }
-Object.assign(self, { CY, cycle, finService, dormir, entrainement, entrerAppartFonction, bavureIGPN, horsService, majDangerJour, utiliserJ: (...a) => utiliser(...a) });
+Object.assign(self, { dotationCivile, CY, cycle, finService, dormir, entrainement, entrerAppartFonction, bavureIGPN, horsService, majDangerJour, utiliserJ: (...a) => utiliser(...a) });
 
 // ================================================================= g8b — FAIM (esthétique) et KEBAB LE SOLEIL : 5 menus, deux repas offerts par jour (midi en journée libre, soir à la prise de service)
 const FAIM = { v: 100, t: 0, bar: null, repasSoirDispo: false, aver: 0 };
@@ -9103,7 +9104,7 @@ function manger(i) { const c = cycle(), M = KEB.menus[i], n = KEB.n; UI.fermerDl
   dire(n, pick(['Ça marche, ' + M.n.split('· ')[1].toLowerCase() + ' ! Deux minutes.', 'Tout de suite chef. Bon appétit.'])); progression('Vous mangez — ' + M.n.split('· ')[1] + '…', 6, () => { FAIM.v = 100; S.faim = 100; J.end = Math.min(cycle().endMax, J.end + 25); toast(M.n + ' — rassasié jusqu’au prochain repas.', 'green'); HEURE = (HEURE + .3) % 24; if (n && !n.cache) { n.clipFixe = 'Idle'; n.mise = true; dire(n, pick(['Fais attention à toi dehors.', 'Bonne continuation, chef.', 'Et passe le bonjour à Delattre.'])); } }); }
 { const _cx = PROC.contexte; PROC.contexte = () => { if (S && KEB.n && !KEB.n.cache && !CINE.actif && Math.hypot(CAM.x - KEB.pos[0], CAM.z - 67.9) < 2.6 && !APP_ETAT.lg) return { t: 'Kebab Le Soleil : parler à Mehdi' + (repasDispo() ? ' · repas offert' : ''), f: () => dialogueKebab() }; return _cx(); }; }
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majFaim(dt); construireKebab(A); assurerKebab(A); } catch (e) { console.error('faim', e); } return _mp(dt, A); }; }
-{ const _dem = demarrer; demarrer = function (slot, st) { FAIM.t = 0; FAIM.v = st && st.faim !== undefined ? st.faim : 100; FAIM.aver = 0; CY.finEnCours = false; CY.bavure = false; CY.lastH = -1; CY.six = false; CY.avert = new Set(); return _dem(slot, st); }; DBG.demarrer = (s2, st) => demarrer(s2, st); }
+{ const _dem = demarrer; demarrer = function (slot, st) { const r0 = (() => { FAIM.t = 0; FAIM.v = st && st.faim !== undefined ? st.faim : 100; FAIM.aver = 0; CY.finEnCours = false; CY.bavure = false; CY.lastH = -1; CY.six = false; CY.avert = new Set(); return _dem(slot, st); })(); if (S && horsService()) dotationCivile(); return r0; }; DBG.demarrer = (s2, st) => demarrer(s2, st); }
 Object.assign(self, { FAIM, KEB, dialogueKebab, manger, repasDispo, kebabOuvert });
 
 // ================================================================= g8c — BINÔME v3 (Brigadier-chef Delattre) : suivi direct sans A* en terrain dégagé, formation stable, vitesses alignées sur le joueur,
@@ -9330,7 +9331,8 @@ Object.assign(self, { GVISE, simulerGMD });
 
 })();</script>
 </body>
-<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v35 (3 nov. 2026)
+<!-- NOTE-INTERNE (Claude) — HDF : MORVAL-NORD v36 (3 nov. 2026)
+v36 — dotationCivile() (g8a) : hors service (arrivée, journée, après fin de service) S.munit = pistolet 15 cartouches sans réserve, taser/lacry/LBD/GMD à zéro ; appelée dans demarrer (si hors service), lancerIntro et finService ; prendreService remet munitionsService().
 v35 — g8e COHÉRENCE PÉNALE (après g8d) : MOTIFS_PEN (rebellionReunion 433-7 al. 2, rebellionArmee 433-8, provocation 433-10, complicite 121-7, menaces 433-3, violencesPDAP 222-13) ; motifsTexte/etatsPNJ/issueJudiciaire/rendreCompteOPJ enveloppés ; penal(n, k) marque un PNJ (n.penal, n.flagrant, indice 'rebellion') et ouvrirControle reprend n.penal dans c.infractions. sceneRebellion(n, c) (déclenchée par majPenal quand l'individu contrôlé est agressif/en fuite après interpellation) : membres du groupe → intervenants (agressifs, rébellion en réunion, armée si couteau), provocateurs (cris, 433-10), complice (arrache l'individu, 121-7), spectateurs (filment) ; attroupement à 4-7 m ; sommationDispersion ; menaces de mort proférées = 433-3 (n._dernierTxt). coherenceChoix filtre menuControle selon n.etat (agressif : sommation / interpeller pour rébellion / maîtriser / renforts ; maîtrisé au sol : interpeller ; menotté : « Participants à interpeller » → m.cible + marqueurs). degatsJoueur enveloppé : violencesPDAP. PROC.joueurKO enveloppé hors service : mortJoueur (cinématique + écran « Mort hors service », S.mort) ou enlevementJoueur (cinématique cave APV[3], −25 ★, PV 35, arme volée, relâché 21 h 36 devant le poste) ou hôpital.
  g8f JOURNÉE EN CIVIL : parlerCivil(n) remplace Aborder/Contrôle/Plaquer… hors service (liens +1 par PNJ, indices sur le point de deal à partir de 3 liens) ; menuRadio, prendreVolant, PROC.injonction refusés hors service. Tests : penal.js, enl.js.
 <!-- (v34)
