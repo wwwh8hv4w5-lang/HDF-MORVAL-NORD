@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v68</title>
+<title>HDF : MORVAL-NORD v69</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -5547,8 +5547,8 @@ function construireMonde(A) {
   const vquad = (cx, cy, cz, nx, nz, w, h, col, mat) => { const rx = -nz, rz = nx, hw = w / 2, hh = h / 2, P = (u, v) => [cx + rx * u, cy + v, cz + rz * u];
     const a = P(-hw, -hh), b = P(hw, -hh), c = P(hw, hh), d = P(-hw, hh), N = [nx, 0, nz]; m.add(new Float32Array([...a, ...N, ...b, ...N, ...c, ...N, ...a, ...N, ...c, ...N, ...d, ...N]), M3.identity(), col, mat); };
   const texNodes = [];
-  const texQuad = (tex, cx, cy, cz, nx, nz, w, h, o = {}) => { const rx = nz, rz = -nx, a = [], V = (u, v) => a.push(cx + rx * (u - .5) * w, cy + (.5 - v) * h, cz + rz * (u - .5) * w, nx, 0, nz, u, v);
-    V(0, 0); V(0, 1); V(1, 1); V(0, 0); V(1, 1); V(1, 0); const nd = new F.Node(o.nom || 'tex'); nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: tex.tagName ? texGL(tex) : tex, rough: o.rough || .7, alphaCut: o.alpha ? .4 : undefined }), null, o.col || [1, 1, 1], 30, { cast: false, maxDist: o.dist || 70 }); nd.pickable = false; A.add(nd); texNodes.push(nd); return nd; };
+  const texQuad = (tex, cx, cy, cz, nx, nz, w, h, o = {}) => { const rx = nz, rz = -nx, a = [], V = (u, v) => a.push(rx * (u - .5) * w, (.5 - v) * h, rz * (u - .5) * w, nx, 0, nz, u, v);   /* v69 : sommets relatifs, nœud au centre du panneau (maxDist mesurée depuis le panneau) */
+    V(0, 0); V(0, 1); V(1, 1); V(0, 0); V(1, 1); V(1, 0); const nd = new F.Node(o.nom || 'tex'); nd.setPos(cx, cy, cz); nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: tex.tagName ? texGL(tex) : tex, rough: o.rough || .7, alphaCut: o.alpha ? .4 : undefined }), null, o.col || [1, 1, 1], 30, { cast: false, maxDist: o.dist || 70 }); nd.pickable = false; A.add(nd); texNodes.push(nd); return nd; };
   const TEXC = new Map(), texGL = c => { let t = TEXC.get(c); if (!t) { t = A.R.texture(c, { repeat: false }); TEXC.set(c, t); } return t; };
   W.texGL = texGL;
 
@@ -5867,9 +5867,9 @@ function construireMonde(A) {
     const quad = (out, a, b, c, d, N) => { tri(out, a, b, c, N); tri(out, a, c, d, N); };
     // parvis, rampe, quai
     sol(104.2, 49.6, QX0, 57.4, .035, [.6, .58, .55], 21);
-    { const o = []; quad(o, [111.6, .04, 49.6], [QX0, QH + .01, 49.6], [QX0, QH + .01, 57.4], [111.6, .04, 57.4], [0, 1, 0]); m.add(new Float32Array(o), M3.identity(), [.55, .54, .52], 21); for (let i = 0; i < 6; i++) sol(111.6 + i * .5, 49.7, 111.75 + i * .5, 57.3, .05 + i * .1, [.75, .62, .1], 21); }
-    box((QX0 + QX1) / 2, 0, (PZ0 + PZ1) / 2, QX1 - QX0, QH, PZ1 - PZ0, BET, 21); sol(QX1 - .55, PZ0, QX1, PZ1, QH + .01, [.82, .82, .8], 21); sol(QX1 - 1.05, PZ0, QX1 - .9, PZ1, QH + .012, [.92, .92, .9], 21);
-    for (let z = PZ0 + .6; z < PZ1; z += 1.2) sol(QX1 - .5, z, QX1 - .05, z + .6, QH + .013, [.72, .72, .7], 21);
+    { const o = []; quad(o, [111.6, .04, 49.6], [QX0, QH + .01, 49.6], [QX0, QH + .01, 57.4], [111.6, .04, 57.4], [0, 1, 0]); m.add(new Float32Array(o), M3.identity(), [.55, .54, .52], 21); const rh = x => .04 + (x - 111.6) / (QX0 - 111.6) * (QH - .03) + .012; for (let i = 0; i < 6; i++) { const xa = 111.6 + i * .5, xb = xa + .15, o2 = []; quad(o2, [xa, rh(xa), 49.7], [xb, rh(xb), 49.7], [xb, rh(xb), 57.3], [xa, rh(xa), 57.3], [0, 1, 0]); m.add(new Float32Array(o2), M3.identity(), [.75, .62, .1], 21); } }   /* v69 : bandes d'éveil dans la pente */
+    box((QX0 + QX1) / 2, 0, (PZ0 + PZ1) / 2, QX1 - QX0, QH, PZ1 - PZ0, BET, 21); sol(QX1 - .55, PZ0, QX1, PZ1, QH + .012, [.82, .82, .8], 21); sol(QX1 - 1.05, PZ0, QX1 - .9, PZ1, QH + .014, [.92, .92, .9], 21);
+    for (let z = PZ0 + .6; z < PZ1; z += 1.2) sol(QX1 - .5, z, QX1 - .05, z + .6, QH + .024, [.72, .72, .7], 21);
     W.GARE.bord = coll(QX1 + .05, QX1 + .4, PZ0, PZ1, 1.6);   // bord du quai : on ne descend pas sur les voies
     // garde-corps (dos du quai, extrémités), murets du parvis
     const gc = (x0, z0, x1, z1, y = QH) => { const hx = Math.abs(z1 - z0) < 1e-3, L = Math.hypot(x1 - x0, z1 - z0); box((x0 + x1) / 2, y + 1.0, (z0 + z1) / 2, hx ? L : .06, .06, hx ? .06 : L, [.3, .33, .35], 22); box((x0 + x1) / 2, y, (z0 + z1) / 2, hx ? L : .12, .25, hx ? .12 : L, BET2, 21);
@@ -5881,7 +5881,7 @@ function construireMonde(A) {
       sol(bx0, bz0, bx1, bz1, .04, [.7, .68, .64], 21); mur(bx0, bz0, bx1, bz0); mur(bx1, bz0, bx1, bz1); mur(bx0, bz0, bx0, bz1); mur(bx0, bz1, ex0, bz1); mur(ex1, bz1, bx1, bz1); box((ex0 + ex1) / 2, 2.8, bz1, ex1 - ex0, h - 2.8, .25, MB, 25);
       box((bx0 + bx1) / 2, h, (bz0 + bz1) / 2, bx1 - bx0 + .8, .35, bz1 - bz0 + .8, [.32, .33, .35], 22); box((bx0 + bx1) / 2, 2.85, bz1 + 1.1, ex1 - ex0 + 2.4, .15, 2.2, [.25, .27, .3], 22);   // toit, marquise
       for (const xx of [ex0, (ex0 + ex1) / 2, ex1]) box(xx, 0, bz1 + .02, .08, 2.8, .1, [.62, .64, .66], 22); box(ex0 + .85, 0, bz1 - .4, .05, 2.6, .9, [.22, .32, .38], 0);   // portes vitrées (un battant ouvert)
-      texQuad(texPlaqueNum('1'), (ex0 + ex1) / 2 + .55, 2.55, bz1 + .09, 0, 1, .44, .25, { dist: 60 });   // v23 : numéro de la gare
+      texQuad(texPlaqueNum('1'), (ex0 + ex1) / 2 + .55, 2.55, bz1 + .14, 0, 1, .44, .25, { dist: 60 });   // v23 : numéro de la gare
       for (const xx of [105.8, 112.4]) box(xx, 1.0, bz1 + .01, 1.6, 1.9, .06, [.2, .3, .36], 0);
       for (const zz of [41, 47]) { box(bx1 + .01, 1.0, zz, .06, 1.9, 2.2, [.2, .3, .36], 0); box(bx0 - .01, 2.6, zz, .06, 1.6, 2.2, [.2, .3, .36], 0); }
       // guichet, distributeurs de titres, valideurs, bancs, tableau des départs
@@ -5893,7 +5893,8 @@ function construireMonde(A) {
       const depart = texCanvas(512, 288, (g, w, hh) => { g.fillStyle = '#16191b'; g.fillRect(0, 0, w, hh); g.fillStyle = '#383e42'; g.fillRect(0, 0, w, 44); g.fillStyle = '#fff'; g.font = '700 26px "Barlow Condensed",Arial,sans-serif'; g.fillText('DÉPARTS · Gare de Morval-Nord', 14, 31);
         g.font = '600 22px "Barlow Condensed",Arial,sans-serif'; const L = [['RER N', 'MORVAL-VILLE', 'Voie 1 · 4 min'], ['RER N', 'MORVAL-VILLE', 'Voie 1 · 9 min'], ['RER N', 'MORVAL-VILLE', 'Voie 1 · 14 min'], ['RER N', 'ST-AUBIN-LA-FORÊT', 'Supprimé · travaux']];
         L.forEach((r, i) => { const y = 82 + i * 52; g.fillStyle = i % 2 ? '#22272a' : '#1d2124'; g.fillRect(0, y - 30, w, 52); g.fillStyle = '#00a092'; g.fillText(r[0], 14, y, 100); g.fillStyle = '#fff'; g.fillText(r[1], 120, y, 232); g.fillStyle = '#67b8e8'; g.fillText(r[2], 360, y, w - 370); }); });
-      texQuad(depart, bx1 - .14, 2.3, 44, -1, 0, 2.2, 1.24, { dist: 30 }); texQuad(depart, 116.6, QH + 2.5, 30, 1, 0, 1.6, .9, { dist: 30 }); texQuad(depart, 116.6, QH + 2.5, 30.02, -1, 0, 1.6, .9, { dist: 30 });
+      box(bx1 - .1, 1.62, 44, .06, 1.36, 2.34, [.16, .17, .18], 22); const depTx = texCanvas(512, 288, (g, w, hh) => { g.fillStyle = '#16191b'; g.fillRect(0, 0, w, hh); g.fillStyle = '#383e42'; g.fillRect(0, 0, w, 44); g.fillStyle = '#fff'; g.font = '700 26px "Barlow Condensed",Arial,sans-serif'; g.fillText('DÉPARTS · Gare de Morval-Nord', 14, 31, w - 28); g.fillStyle = '#ff6a3d'; g.font = '800 44px "Barlow Condensed",Arial,sans-serif'; g.fillText('TRAFIC INTERROMPU', 14, 120, w - 28); g.fillStyle = '#d9dde0'; g.font = '600 24px "Barlow Condensed",Arial,sans-serif'; g.fillText('RER N : incident sur la voie', 14, 172, w - 28); g.fillText('Aucun train jusqu’à nouvel ordre', 14, 206, w - 28); g.fillText('Renseignements : agents en gare', 14, 240, w - 28); });
+      W.GARE.depart = [texQuad(depart, bx1 - .14, 2.3, 44, -1, 0, 2.2, 1.24, { dist: 30 }), texQuad(depTx, bx1 - .14, 2.3, 44, -1, 0, 2.2, 1.24, { dist: 30 })]; W.GARE.depart[1].visible = false;   /* v69 : panneau du hall (normal / travaux), cadre ; doublons du quai retirés (écrans v68) */
       const nomGare = texCanvas(1024, 160, (g, w, hh) => { g.fillStyle = '#383e42'; g.fillRect(0, 0, w, hh); g.fillStyle = '#f2f4f8'; g.textAlign = 'center'; g.font = '800 74px "Barlow Condensed",Arial,sans-serif'; g.fillText('GARE DE MORVAL-NORD', w / 2, 92, 660); g.font = '500 30px "Barlow Condensed",Arial,sans-serif'; g.fillStyle = '#67b8e8'; g.fillText('RER N · Morval-Ville ⇄ Saint-Aubin-la-Forêt', w / 2, 138); texModeRER(g, 92, hh / 2, 56); texBadgeN(g, w - 92, hh / 2, 56); });
       texQuad(nomGare, (bx0 + bx1) / 2, 4.15, bz1 + .15, 0, 1, 7.6, 1.2, { dist: 120 }); texQuad(nomGare, bx0 - .15, 4.3, (bz0 + bz1) / 2, -1, 0, 8.6, 1.35, { dist: 160 });
       box(bx0 - .3, 4.85, (bz0 + bz1) / 2, .25, .1, 8.6, [2.0, 1.8, 1.4], 8); box((bx0 + bx1) / 2, 4.75, bz1 + .35, 7.6, .08, .2, [2.0, 1.8, 1.4], 8);
@@ -5909,7 +5910,7 @@ function construireMonde(A) {
     /* v68 : composteurs de quai retirés (accès contrôlé par portillons) */
     for (const z of [2, 52, 58]) { box(QX0 + .4, QH, z, .1, 4.4, .1, [.25, .28, .3], 22); box(QX0 + .4, QH + 4.4, z, .3, .15, .3, [2.2, 2.0, 1.6], 8); }
     const panQuai = texCanvas(512, 128, (g, w, hh) => { g.fillStyle = '#383e42'; g.fillRect(0, 0, w, hh); g.strokeStyle = '#f2f4f8'; g.lineWidth = 5; g.strokeRect(8, 8, w - 16, hh - 16); g.fillStyle = '#f2f4f8'; g.textAlign = 'center'; g.font = '800 64px "Barlow Condensed",Arial,sans-serif'; g.fillText('MORVAL-NORD', w / 2, 86); });
-    for (const z of [0, 20, 38, 56]) { box(QX0 + .3, QH, z, .08, 2.3, .08, [.25, .28, .3], 22); texQuad(panQuai, QX0 + .3, QH + 2.6, z, 1, 0, 2.2, .55, { dist: 60 }); texQuad(panQuai, QX0 + .26, QH + 2.6, z, -1, 0, 2.2, .55, { dist: 60 }); texQuad(panQuai, 124.0, 2.0, z + 6, -1, 0, 3.4, .85, { dist: 70 }); }
+    for (const z of [0, 20, 38, 56]) box(QX0 + .3, QH, z, .08, 2.3, .08, [.25, .28, .3], 22);   /* v69 : plaques dessinées par le module gare v65 (anciennes doublures retirées) */
     // voie : ballast, traverses, rails (prolongés dans les tunnels), mur de soutènement côté forêt, caténaire
     box(TX, 0, (NP - 46 + SP + 46) / 2, 4.2, .2, SP - NP + 92, [.34, .32, .3], 13);
     for (let z = NP - 44; z < SP + 44; z += .7) box(TX, .2, z, 2.6, .1, .24, [.3, .27, .24], 13);
@@ -8814,7 +8815,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '68'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '69'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -12039,18 +12040,18 @@ function construireGare65(A) { const G = W.GARE; if (G65.fait || !G || !A) retur
   const Q = (tex, cx, cy, cz, nx, nz, w, h, k = 1.05) => { let a = TQ.get(tex); if (!a) { a = []; a.k = k; TQ.set(tex, a); } const rx = nz, rz = -nx, P = (sx, sy, u, v) => a.push(cx + rx * sx * w / 2, cy + sy * h / 2, cz + rz * sx * w / 2, nx, 0, nz, u, v); P(-1, 1, 0, 0); P(-1, -1, 0, 1); P(1, -1, 1, 1); P(-1, 1, 0, 0); P(1, -1, 1, 1); P(1, 1, 1, 0); };
   const NAVY = [.22, .24, .26], INOX = [.62, .64, .67], INOX2 = [.45, .47, .5], VERRE = [.32, .42, .48], JAUNE = [.95, .76, .08];
   // ligne jaune de sécurité (sur la bande blanche existante) et bandes d'éveil devant les panneaux
-  B(QX1 - .96, QH + .012, (PZ0 + PZ1) / 2, .12, .006, PZ1 - PZ0 - .1, JAUNE, 21);
+  B(QX1 - .96, QH + .016, (PZ0 + PZ1) / 2, .12, .012, PZ1 - PZ0 - .1, JAUNE, 21);
   // plaques « Morval-Nord » : par-dessus les anciennes plaques (deux faces) et sur le mur côté forêt
   const tn = texNomQuai65(false), tnL = texNomQuai65(true);
   for (const z of [0, 20, 38, 56]) { Q(tn, QX0 + .316, QH + 2.6, z, 1, 0, 2.24, .56); Q(tn, QX0 + .244, QH + 2.6, z, -1, 0, 2.24, .56); Q(tnL, 123.98, 2.0, z + 6, -1, 0, 3.44, .86); }
   // plaques suspendues au bord de la marquise (lisibles depuis la rame)
-  for (const z of [9, 27, 43]) { for (const dz of [-.8, .8]) B(QX1 - 1.32, QH + 2.88, z + dz, .03, .2, .03, INOX2); B(QX1 - 1.32, QH + 2.4, z, .06, .48, 2.06, NAVY); Q(tn, QX1 - 1.288, QH + 2.64, z, 1, 0, 2.0, .46); Q(tn, QX1 - 1.352, QH + 2.64, z, -1, 0, 2.0, .46); }
+  for (const z of [9, 27, 43]) { for (const dz of [-.8, .8]) B(QX1 - 1.32, QH + 2.88, z + dz, .03, .2, .03, INOX2); B(QX1 - 1.32, QH + 2.4, z, .06, .48, 2.06, NAVY); Q(tn, QX1 - 1.278, QH + 2.64, z, 1, 0, 2.0, .46); Q(tn, QX1 - 1.362, QH + 2.64, z, -1, 0, 2.0, .46); }
   // bandeaux de direction sous la marquise (deux faces : voie 1 / sortie)
   const tb = texBandeau65(false), ts = texBandeau65(true);
-  for (const z of [14, 36]) { const cx = QX0 + 2.0; for (const dx of [-1.35, 1.35]) B(cx + dx, QH + 2.76, z, .03, .3, .03, INOX2); B(cx, QH + 2.34, z, 3.04, .44, .05, [.85, .86, .88]); Q(tb, cx, QH + 2.56, z + .03, 0, 1, 3.0, .42); Q(ts, cx, QH + 2.56, z - .03, 0, -1, 3.0, .42); }
+  for (const z of [14, 36]) { const cx = QX0 + 2.0; for (const dx of [-1.35, 1.35]) B(cx + dx, QH + 2.76, z, .03, .3, .03, INOX2); B(cx, QH + 2.34, z, 3.04, .44, .05, [.85, .86, .88]); Q(tb, cx, QH + 2.56, z + .036, 0, 1, 3.0, .42); Q(ts, cx, QH + 2.56, z - .036, 0, -1, 3.0, .42); }
   // horloge de quai double face (aiguilles animées)
   { const cx = QX0 + 2.0, cy = QH + 2.5, cz = 23, tc = texCadran65(); B(cx, cy + .38, cz, .04, .17, .04, INOX2); m.add(GEO.cylinder(24), M3.mul(M3.translate(cx, cy, cz), M3.mul(M3.rotX(PI / 2), M3.scale(.72, .1, .72))), [.15, .16, .18], 22); nP++;
-    for (const f of [1, -1]) { Q(tc, cx, cy, cz + f * .052, 0, f, .7, .7, 1.1); for (const [L, E, k] of [[.21, .03, 'h'], [.3, .02, 'm']]) { const n = new F.Node('aiguille'); n.addPart(A.R.makeMesh(GEO.roundBox(E, L, .008, 0)), M3.translate(0, L / 2 - .04, 0), [.05, .05, .05], 22, { cast: false }); n.pos = [cx, cy, cz + f * .062]; n.pickable = false; n.castShadow = false; A.add(n); G65.aig.push({ n, f, k }); } } }
+    for (const f of [1, -1]) { Q(tc, cx, cy, cz + f * .06, 0, f, .7, .7, 1.1); for (const [L, E, k] of [[.21, .03, 'h'], [.3, .02, 'm']]) { const n = new F.Node('aiguille'); n.addPart(A.R.makeMesh(GEO.roundBox(E, L, .008, 0)), M3.translate(0, L / 2 - .04, 0), [.05, .05, .05], 22, { cast: false }); n.pos = [cx, cy, cz + f * .07]; n.pickable = false; n.castShadow = false; A.add(n); G65.aig.push({ n, f, k }); } } }
   // colonnes d'information (plan de la ligne N, prochains trains)
   const tcol = texColonne65();
   for (const z of [8, 26, 47.6]) { const x = QX0 + .95; B(x, QH, z, .3, .12, .78, INOX2); B(x, QH + .12, z, .26, 2.46, .74, NAVY); B(x, QH + 2.58, z, .32, .1, .8, INOX2); B(x + .135, QH + 2.38, z, .01, .1, .7, [1.5, 1.55, 1.6], 8); Q(tcol, x + .14, QH + 1.33, z, 1, 0, .64, 2.08); coll(x - .16, x + .16, z - .4, z + .4, 2.7); }
@@ -12058,16 +12059,16 @@ function construireGare65(A) { const G = W.GARE; if (G65.fait || !G || !A) retur
   { const x0 = QX0 + .15, x1 = QX0 + 1.65, z0 = -4.6, z1 = -1.4, zc = (z0 + z1) / 2, CAD = [.5, .53, .56];   /* v68 : abri à parois « vitrées » ouvertes (cadres + bandes anti-collision), panneau plan du quartier au fond */
     B(x0, QH, zc, .06, 2.3, z1 - z0, CAD); for (const z of [z0, z1]) { B((x0 + x1) / 2, QH + .25, z, x1 - x0, .04, .04, CAD); B((x0 + x1) / 2, QH + 2.26, z, x1 - x0, .04, .04, CAD); for (const y of [1.0, 1.55]) B((x0 + x1) / 2, QH + y, z, x1 - x0 - .1, .05, .012, [.82, .84, .86]); B((x0 + x1) / 2, QH + .25, z, .04, 2.0, .04, CAD); }
     for (const [x, z] of [[x0, z0], [x0, z1], [x1, z0], [x1, z1]]) B(x, QH, z, .07, 2.4, .07, NAVY); B((x0 + x1) / 2, QH + 2.4, zc, x1 - x0 + .3, .08, z1 - z0 + .3, NAVY); B(x1 + .1, QH + 2.2, zc, .04, .2, z1 - z0, [.4, .72, .91]);
-    B(x0 + .05, QH + .45, zc, .03, 1.9, 1.7, [.2, .22, .24]); Q(texPlanQuartier68(), x0 + .072, QH + 1.4, zc, 1, 0, 1.6, 1.8);
+    B(x0 + .05, QH + .45, zc, .03, 1.9, 1.7, [.2, .22, .24]); Q(texPlanQuartier68(), x0 + .08, QH + 1.4, zc, 1, 0, 1.6, 1.8);
     B(x0 + .35, QH + .42, zc - .9, .4, .05, 1.2, [.55, .56, .58]); B(x0 + .35, QH + .42, zc + .9, .4, .05, 1.2, [.55, .56, .58]); for (const z of [z0 + .5, z1 - .5]) B(x0 + .35, QH, z, .06, .42, .3, INOX2); B(x0 + .2, QH + 2.3, zc, .3, .03, 2.2, [2.1, 2.0, 1.8], 8);
-    Q(tn, x1 + .125, QH + 2.3, zc, 1, 0, 1.6, .4); coll(x0 - .05, x0 + .5, z0, z1, 2.2); coll(x0, x1, z0 - .05, z0 + .05, 2.2); coll(x0, x1, z1 - .05, z1 + .05, 2.2); }
+    Q(tn, x1 + .132, QH + 2.3, zc, 1, 0, 1.6, .4); coll(x0 - .05, x0 + .5, z0, z1, 2.2); coll(x0, x1, z0 - .05, z0 + .05, 2.2); coll(x0, x1, z1 - .05, z1 + .05, 2.2); }
   { const z = -6.5; for (const dz of [-.65, .65]) B(QX0 + .4, QH, z + dz, .06, .82, .06, INOX2); B(QX0 + .4, QH + .74, z, .14, .06, 1.5, [.4, .72, .91]); coll(QX0 + .25, QX0 + .55, z - .75, z + .75, .9); }
   // portillons d'accès aux quais (ligne x 110,4–111,6, z 49,7–57,3) + passage PMR (z 52,86–54,14) sur l'axe des piétons
   const PZ = [49.84, 50.8, 51.77, 52.74, 54.26, 55.26, 56.26, 57.2];
   for (const z of PZ) { const x = 111.0; B(x, .04, z, 1.2, .96, .24, INOX); B(x, 1.0, z, 1.24, .04, .28, [.2, .22, .25]); B(x - .5, 1.04, z, .16, .03, .16, [.12, .75, .3], 8); B(x - .61, .55, z, .02, .12, .1, [.12, .8, .3], 8); B(x + .61, .55, z, .02, .12, .1, [.85, .12, .1], 8); B(x - .2, 1.04, z, .3, .02, .14, [.1, .12, .14], 3);
     if (z !== 52.74 && z !== 49.84) B(x + .05, .5, z - .2, .5, .6, .02, VERRE, 3); if (z !== 54.26 && z !== 57.2) B(x + .05, .5, z + .2, .5, .6, .02, VERRE, 3); coll(x - .6, x + .6, z - .12, z + .12, 1.1); }
   for (const z of [52.88, 54.12]) B(111.25, .2, z, .9, 1.05, .02, VERRE, 3);   /* vantaux PMR ouverts, rabattus */
-  { const x = 111.0; for (const z of [49.78, 57.3]) B(x, .04, z, .12, 2.74, .12, NAVY); B(x, 2.72, 53.54, .14, .1, 7.6, NAVY); B(x, 2.16, 53.54, .08, .56, 7.4, NAVY); Q(texPortique65(false), x - .045, 2.44, 53.54, -1, 0, 7.3, .52); Q(texPortique65(true), x + .045, 2.44, 53.54, 1, 0, 7.3, .52); }
+  { const x = 111.0; for (const z of [49.78, 57.3]) B(x, .04, z, .12, 2.74, .12, NAVY); B(x, 2.72, 53.54, .14, .1, 7.6, NAVY); B(x, 2.16, 53.54, .08, .56, 7.4, NAVY); Q(texPortique65(false), x - .052, 2.44, 53.54, -1, 0, 7.3, .52); Q(texPortique65(true), x + .052, 2.44, 53.54, 1, 0, 7.3, .52); }
   // build
   const nd = new F.Node('gare65'); for (const p of m.build(a => A.R.makeMesh(a))) nd.addPart(p.mesh, null, p.color, p.mat, { cast: false });
   for (const [tex, a] of TQ) nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: A.R.texture(tex, { repeat: false }), rough: 1 }), null, [a.k, a.k, a.k], 31, { cast: false });
@@ -12172,18 +12173,18 @@ function construireGare68(A) { const G = W.GARE; if (G68.fait || !G || !A) retur
     const sx = ax === 'z' ? .024 : L, sz = ax === 'z' ? L : .024; B(x, 0, z, sx, 1.0, sz, CARR); B(x, 1.0, z, ax === 'z' ? .03 : L, .08, ax === 'z' ? L : .03, ANTH); B(x, 0, z, ax === 'z' ? .03 : L, .1, ax === 'z' ? L : .03, [.3, .31, .32], 21); }
   B((ix0 + ix1) / 2, 0, iz0 + .012, ix1 - ix0, 3.0, .024, CARR); B((ix0 + ix1) / 2, 3.0, iz0 + .012, ix1 - ix0, 2.1, .024, PEINT); B((ix0 + ix1) / 2, 3.0, iz0 + .02, ix1 - ix0, .08, .03, ANTH);
   // signalétique suspendue du hall : Sortie (vers le parvis) / Billets · Accueil (en entrant)
-  { const x = 109.1, z = 48.7, y = 2.92; for (const dx of [-1.1, 1.1]) B(x + dx, y + .22, z, .03, 5.14 - y - .22, .03, INOX2); B(x, y - .02, z, 2.5, .48, .05, [.85, .86, .88]); Q(texBandeau65(true), x, y + .22, z - .03, 0, -1, 2.46, .44); Q(texPlaqueGuichet('Billets · Accueil', 'Guichet · distributeur · informations'), x, y + .22, z + .03, 0, 1, 2.46, .44); }
+  { const x = 109.1, z = 48.7, y = 2.92; for (const dx of [-1.1, 1.1]) B(x + dx, y + .22, z, .03, 5.14 - y - .22, .03, INOX2); B(x, y - .02, z, 2.5, .48, .05, [.85, .86, .88]); Q(texBandeau65(true), x, y + .22, z - .036, 0, -1, 2.46, .44); Q(texPlaqueGuichet('Billets · Accueil', 'Guichet · distributeur · informations'), x, y + .22, z + .036, 0, 1, 2.46, .44); }
   // ---- totem RER du parvis (angle sud-ouest du BV)
-  { const x = 105.2, z = 50.45; B(x, 0, z, .34, .1, .34, [.3, .31, .32], 21); B(x, .1, z, .3, 3.3, .3, ANTH); B(x, 3.4, z, .34, .06, .34, [.4, .72, .91]); const tt = texTotem68(); Q(tt, x - .156, 1.95, z, -1, 0, .28, 2.9); Q(tt, x + .156, 1.95, z, 1, 0, .28, 2.9); Q(tt, x, 1.95, z + .156, 0, 1, .28, 2.9); coll(x - .2, x + .2, z - .2, z + .2, 3.5); }
+  { const x = 105.2, z = 50.45; B(x, 0, z, .34, .1, .34, [.3, .31, .32], 21); B(x, .1, z, .3, 3.3, .3, ANTH); B(x, 3.4, z, .34, .06, .34, [.4, .72, .91]); const tt = texTotem68(); Q(tt, x - .162, 1.95, z, -1, 0, .28, 2.9); Q(tt, x + .162, 1.95, z, 1, 0, .28, 2.9); Q(tt, x, 1.95, z + .162, 0, 1, .28, 2.9); coll(x - .2, x + .2, z - .2, z + .2, 3.5); }
   // ---- écrans d'information voyageurs suspendus à la marquise (double face)
   const sOk = texSiel68(false), sTx = texSiel68(true), ndOk = new F.Node('siel68'), ndTx = new F.Node('siel68t'), QS = [[], []];
   for (const z of [18, 39]) { const x = 117.3, y = QH + 2.36; for (const dz of [-.55, .55]) B(x, y + .23, z + dz, .03, QH + 3.05 - (y + .23), .03, INOX2); B(x, y, z, 1.36, .46, .09, [.16, .17, .18]);
-    for (const k of [0, 1]) for (const f of [1, -1]) QS[k].push([x, y + .23, z + f * .048, f]); }
+    for (const k of [0, 1]) for (const f of [1, -1]) QS[k].push([x, y + .23, z + f * .058, f]); }
   // ---- corbeilles transparentes (plan Vigipirate) : quai, parvis, hall
   for (const [x, z, y] of [[QX0 + .35, 4, QH], [QX0 + .35, 31, QH], [QX0 + .35, 50.5, QH], [106.6, 56.6, .035], [106.3, 49.1, .04], [112.95, 47.6, .04]]) { B(x, y, z, .05, .95, .05, [.3, .32, .35]); Cy(x + .2, y + .86, z, .2, .025, [.3, .32, .35]); Cy(x + .2, y + .32, z, .175, .55, [.62, .68, .62], 3); }
   // ---- extincteurs (hall, marquise) et borne d'appel d'urgence sur le quai
   for (const [x, z, y] of [[104.86, 48.4, .2], [113.34, 43.6, .2], [QX0 + .62, 6.3, QH + .2]]) { B(x + (x > 110 && x < 114 ? .06 : -.06), y + .1, z, .03, .75, .32, [.78, .1, .1]); Cy(x, y, z, .085, .58, [.8, .08, .08], 22); Cy(x, y + .58, z, .03, .08, [.12, .12, .13], 22); }
-  { const x = QX0 + .3, z = 20.5; B(x, QH, z, .24, 1.55, .2, ANTH); B(x, QH + 1.55, z, .28, .05, .24, [.4, .72, .91]); Q(texBorneAppel68(), x + .122, QH + .95, z, 1, 0, .2, .4); coll(x - .15, x + .15, z - .13, z + .13, 1.7); }
+  { const x = QX0 + .3, z = 20.5; B(x, QH, z, .24, 1.55, .2, ANTH); B(x, QH + 1.55, z, .28, .05, .24, [.4, .72, .91]); Q(texBorneAppel68(), x + .132, QH + .95, z, 1, 0, .2, .4); coll(x - .15, x + .15, z - .13, z + .13, 1.7); }
   // build
   const nd = new F.Node('gare68'); for (const p of m.build(a => A.R.makeMesh(a))) nd.addPart(p.mesh, null, p.color, p.mat, { cast: false });
   for (const [tex, a] of TQ) nd.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: A.R.texture(tex, { repeat: false }), rough: 1 }), null, [a.k, a.k, a.k], 31, { cast: false });
@@ -12191,7 +12192,7 @@ function construireGare68(A) { const G = W.GARE; if (G68.fait || !G || !A) retur
   for (const [k, ndS, tex] of [[0, ndOk, sOk], [1, ndTx, sTx]]) { const a = []; for (const [x, y, z, f] of QS[k]) { const nx = 0, nz = f, rx = nz, rz = -nx, w = 1.3, h = .42, P = (sx, sy, u, v) => a.push(x + rx * sx * w / 2, y + sy * h / 2, z + rz * sx * w / 2, nx, 0, nz, u, v); P(-1, 1, 0, 0); P(-1, -1, 0, 1); P(1, -1, 1, 1); P(-1, 1, 0, 0); P(1, -1, 1, 1); P(1, 1, 1, 0); }
     ndS.addPart(A.R.makeMesh(new Float32Array(a), { uv: true, tex: A.R.texture(tex, { repeat: false }), rough: 1 }), null, [1.1, 1.1, 1.1], 31, { cast: false }); ndS.pickable = false; ndS.castShadow = false; A.add(ndS); }
   G68.siel = [ndOk, ndTx]; G68.stats = { pieces: nP, quads: TQ.size, ms: Math.round(performance.now() - t0) }; }
-function majGare68(dt, A) { if (!G68.fait) { if (W.GARE && A && S) construireGare68(A); return; } const tx = !!(typeof travauxGare === 'function' && travauxGare()); if (G68.siel.length) { G68.siel[0].visible = !tx; G68.siel[1].visible = tx; } }
+function majGare68(dt, A) { if (!G68.fait) { if (W.GARE && A && S) construireGare68(A); return; } const tx = !!(typeof travauxGare === 'function' && travauxGare()); if (G68.siel.length) { G68.siel[0].visible = !tx; G68.siel[1].visible = tx; } const D = W.GARE.depart; if (D) { D[0].visible = !tx; D[1].visible = tx; } }
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majGare68(dt || .016, A); } catch (e) { console.error('gare68', e); } return _mp(dt, A); }; }
 self.V73 = { G68, construireGare68 };
 // ================================================================= v67 — DOSSARDS « SUGE » (agents de sûreté FSM Rail) et « SNCF » (contrôleurs) + gare aux codes couleur franciliens
@@ -12348,7 +12349,7 @@ function decorVille67(poser, R, zone) { const st = VV.st, NOIR = [.07, .07, .08]
   for (const [x0, x1, z] of [[-97, -43, 69.0], [59, 85, 69.0], [-84, 90, 81.1]]) for (let x = x0; x <= x1; x += z > 80 ? 14 : 6) { drB(x, .004, z, .1, .006, 2.0, BLANC, 21); }
   { const t = drTex(128, 128, (g, w, h) => { g.fillStyle = '#d9dbd8'; g.lineWidth = 9; g.strokeStyle = '#e8e9e6'; g.beginPath(); g.arc(34, 84, 22, 0, PI * 2); g.stroke(); g.beginPath(); g.arc(96, 84, 22, 0, PI * 2); g.stroke(); g.beginPath(); g.moveTo(34, 84); g.lineTo(58, 50); g.lineTo(84, 50); g.lineTo(96, 84); g.moveTo(58, 50); g.lineTo(66, 84); g.lineTo(84, 50); g.stroke(); });
     for (let x = -96; x <= 96; x += 3) if (Math.abs(x) > 8) drB(x, .004, 80.05, 1.5, .006, .1, BLANC, 21); for (let x = -90; x <= 90; x += 30) drQH(t, x, .012, 80.4, 1.0, 1.0, .9, PI / 2); }
-  { const t = drTex(256, 256, (g, w, h) => { g.fillStyle = '#6b6862'; g.fillRect(0, 0, w, h); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const v = 120 + ((x * 31 + y * 17) % 40); g.fillStyle = `rgb(${v},${v - 4},${v - 10})`; g.fillRect(x * 16 + (y % 2) * 8 + 1, y * 16 + 1, 14, 14); } }); for (let x = 105; x < 111; x += 2) for (let z = 50.5; z < 57; z += 2) drQH(t, x, .04, z, 2, 2, .55); }
+  { const t = drTex(256, 256, (g, w, h) => { g.fillStyle = '#6b6862'; g.fillRect(0, 0, w, h); for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const v = 120 + ((x * 31 + y * 17) % 40); g.fillStyle = `rgb(${v},${v - 4},${v - 10})`; g.fillRect(x * 16 + (y % 2) * 8 + 1, y * 16 + 1, 14, 14); } }); for (let x = 105; x < 111; x += 2) for (let z = 50.75; z < 57; z += 2) drQH(t, x, .047, z, 2, 2, .55);   /* v69 : 1 cm au-dessus du parvis (.035), sans recouvrir le sol du hall ni la rampe */ }
   // ---- nouveaux lieux ----
   // 1. aire de jeux (x −74/−60, z 54/64) : sol souple, toboggan, balançoire (sièges animés), tourniquet, jeux à ressort, clôture basse, bancs, panneau
   { const x0 = -74, x1 = -60, z0 = 54, z1 = 64; if (zone(-67, 59) && drLibre(x0, x1, z0, z1, .3)) { const CL = [.22, .45, .3];
@@ -12604,5 +12605,6 @@ v68 — DOSSARDS (module DOS, self.DOS) : quad texturé « SUGE » (n.suge) / «
 v68 — RER : pictogramme texModeRER (carré blanc, « RER » anthracite) à côté de l'indice N sur plaques de quai, bandeaux, colonnes, portique des portillons, enseignes du BV et de l'enceinte ; « Ligne N » → « RER N » sur la signalétique, le tableau des départs, le logo de flanc et l'écran de la rame (dialogues et radio inchangés).
 v68 — finitions : gilet SUGE sans le marquage POLICE (insignia = accent), bornes/composteurs bleu IDF atténué [.2,.42,.58], DOS restaure UNPACK_FLIP_Y / PREMULTIPLY / unité active, fillText maxWidth sur la signalétique de gare (police de repli hors ligne). Version bâtie sur la v67-MAJ.
 v68 — GARE RÉALISTE (module G68, self.V73, construit au 1er majPNJ comme G65) : hall du BV fini (faux plafond y 5,14 sous les luminaires, soubassement carrelé 1 m + frise anthracite + plinthe sur les 4 murs hors entrée, mur nord habillé), signalétique suspendue Sortie / Billets · Accueil (x 109,1 · z 48,7), totem RER du parvis (105,2 ; 50,45), 2 écrans d'information double face sous la marquise (x 117,3 · z 18 et 39 ; G68.siel[0] normal / [1] « trafic interrompu » selon travauxGare()), 6 corbeilles transparentes Vigipirate, 3 extincteurs, borne d'appel d'urgence (QX0+.3 ; 20,5). Retirés : valideurs du hall (gare1 et DR.stats.validateurs du module mobilier v66 ; validation aux portillons), composteurs du quai ; comptoir d'accueil à vitre basse (mat 3), banc de hall métallique ; abri de quai : parois en cadres + bandes anti-collision (le vitrage mat 3 rendait des murs noirs) et plan du quartier (texPlanQuartier68) ; témoins des portillons adoucis.
+v69 — TEXTURES ET SCINTILLEMENT DE LA GARE : texQuad (construireMonde) pose désormais ses sommets relatifs au centre et le nœud au centre du panneau — la distance d'affichage (maxDist) était mesurée depuis l'origine du monde, d'où les grandes enseignes « GARE DE MORVAL-NORD » (dist 120/160) qui disparaissaient en s'approchant à l'est (corrige aussi toutes les enseignes de la ville posées par texQuad). Gare : marquages du quai espacés (bandes QH+.012/.014, bandes d'éveil QH+.024, ligne jaune QH+.016 h .012), bandes podotactiles de la rampe posées dans la pente (rh(x)), pavés du parvis à .047 et z ≥ 49,75 (recouvraient le sol du hall et la rampe), panneaux texturés décollés d'au moins 1 cm de leurs supports (plaques suspendues, bandeaux, portique, horloge + aiguilles, abri, hall, totem, écrans, borne). Doublons retirés : plaques de quai gare1 (sous les plaques v65), 2 tableaux de départ du quai coplanaires (cause de scintillement) ; tableau du hall encadré + version « TRAFIC INTERROMPU » (W.GARE.depart[0/1], bascule dans majGare68), numéro de gare décollé du linteau.
 -->
 </html>
