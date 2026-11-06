@@ -13056,9 +13056,18 @@ self.V83 = HEL;
 // Horaires (HEURE de jeu) : approche 19 h 20 → 20 h 00 (ligne droite depuis 1,5 km, tangente à l'orbite), ronde 20 h → 4 h 30, départ 4 h 30 → 5 h 20
 // (s'éloigne et monte), invisible le reste du temps (LEV.nd.visible = false, escorte aussi). Angle d'orbite intégré en temps réel (LEV.t) pendant la présence.
 // Pavillon : maillage de la toile du drapeau de la cité (DRP.arr, même texture DRP.tex) × 3 sur un mât de poupe, flotte vers l'arrière.
-// Balayage : toutes les 10 min réelles de présence (premier 60 s après l'arrivée), 50 s : 6 projecteurs sous les enveloppes (faisceaux émissifs + lumières spot)
+// Balayage : toutes les 10 min réelles de présence (premier 60 s après l'arrivée), 50 s : 6 projecteurs sous les enveloppes (faisceaux émissifs + lumières spot) ; annonce HP de la flotte royale à chaque allumage
 // visent des points qui parcourent la cité (Lissajous), fondu 3 s.
 const L83 = { ok: false, flag: null, flagMesh: null, beams: [], scanT: 0, scanNext: 60, scan: -1, etat: 'absent', th0: 0, k: 0 };
+const TXT_GOLIATH = 'Cité de Morval-Nord, ici la flotte royale, nous recherchons un individu en fuite du palais. Si vous avez la moindre informations la garde royale offre 1 million d’euros à celui ou celle qui permettras de le retrouver';
+function annonceGoliath() {   /* v83c : haut-parleurs du vaisseau à chaque allumage des projecteurs */
+  try {
+    const P = LEV.nd && LEV.nd.pos, d = P ? Math.hypot(CAM.x - P[0], CAM.y - P[1], CAM.z - P[2]) : 280;
+    const vol = clamp(1 - Math.max(0, d - 160) / 640, .38, 1);
+    parler(TXT_GOLIATH, { g: 'm', p: .76, r: .9, vol }, true);
+    sousTitre('Flotte royale', (vol < .55 ? '(au loin) ' : '') + TXT_GOLIATH);
+  } catch (e) { L83.annErr = String(e && e.message); }
+}
 function lev83Extras(A) { if (L83.ok || !LEV.nd || !DRP.arr || !DRP.tex) return; const R = A.R, T = M3.translate, S = M3.scale, mul = M3.mul;
   const mat = new F.Node('lev-mat'); mat.setPos(0, 1, 106); mat.addPart(R.makeMesh(GEO.cylinder(10, .5, .5)), mul(T(0, 11, 0), S(.7, 22, .7)), [.2, .21, .23], 7, { cast: false, keep: true }); mat.addPart(R.makeMesh(GEO.sphere(8, 6)), mul(T(0, 22.4, 0), S(1, 1, 1)), [.85, .68, .3], 7, { cast: false, keep: true }); LEV.nd.add(mat);
   const fm = R.makeMesh(DRP.arr, { uv: true, noWeld: true, tex: DRP.tex, rough: .92 }); fm.br = DRP.L * 3 + 4; const fl = new F.Node('lev-pavillon'); fl.setPos(0, 22.6, 106.4); fl.rot = [0, -PI / 2, 0]; fl.addPart(fm, S(3, 3, 3), [1.45, 1.45, 1.45], 30, { cast: false, keep: true }); LEV.nd.add(fl); L83.flag = fl; L83.flagMesh = fm;
@@ -13090,7 +13099,7 @@ majLeviathan = function (dt, A) { if (!LEV.nd) { construireLeviathan(A); return;
   let nt = 1; try { nt = nuit(); } catch (e) { }
   if (nt > .2 && L83.scan < 0) try { A.addLight({ p: [x, y - 30, z], c: [.9, .95, 1], i: 60, r: 220, dir: [0, -1, 0], cone: [.985, .996] }); } catch (e) { }
   // balayage
-  if (etat === 'ronde') { L83.scanT += dt; if (L83.scan < 0 && L83.scanT >= L83.scanNext) { L83.scan = 0; L83.scanNext = L83.scanT + 600; try { SON.fx.bip && SON.fx.bip(); } catch (e) { } } }
+  if (etat === 'ronde') { L83.scanT += dt; if (L83.scan < 0 && L83.scanT >= L83.scanNext) { L83.scan = 0; L83.scanNext = L83.scanT + 600; try { SON.fx.bip && SON.fx.bip(); } catch (e) { } try { annonceGoliath(); } catch (e) { } } }
   const Wm = LEV.nd.world;
   for (const B of L83.beams) { B.b.visible = true; const l = B.loc, px = Wm ? Wm[0] * l[0] + Wm[4] * l[1] + Wm[8] * l[2] + Wm[12] : x, py = Wm ? Wm[1] * l[0] + Wm[5] * l[1] + Wm[9] * l[2] + Wm[13] : y, pz = Wm ? Wm[2] * l[0] + Wm[6] * l[1] + Wm[10] * l[2] + Wm[14] : z; B.b.pos = [px, py, pz];
     let fd = 0; if (L83.scan >= 0) { const s = L83.scan; fd = Math.min(1, s / 3, (50 - s) / 3); }
