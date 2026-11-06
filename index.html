@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v74</title>
+<title>HDF : MORVAL-NORD v77</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1423,7 +1423,7 @@ function createRenderer(gl,opt={}){
   const planes=M3.frustum(M3.identity());let culled=[];
   R.cull=function(list,vp,eye){M3.frustum(vp,planes);if(culled.length<list.length)culled=new Array(list.length);let n=0;
     for(const it of list){const m=it.mesh,M=it.M;if(m&&m.bc){const c=m.bc,x=M[0]*c[0]+M[4]*c[1]+M[8]*c[2]+M[12],y=M[1]*c[0]+M[5]*c[1]+M[9]*c[2]+M[13],z=M[2]*c[0]+M[6]*c[1]+M[10]*c[2]+M[14];
-        const s=Math.sqrt(Math.max(M[0]*M[0]+M[1]*M[1]+M[2]*M[2],M[4]*M[4]+M[5]*M[5]+M[6]*M[6],M[8]*M[8]+M[9]*M[9]+M[10]*M[10])),rr=m.br*s;if(eye&&rr<2.5){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2],d2=ex*ex+ey*ey+ez*ez,lim=rr<.7?32:rr<1.4?46:60;if(d2>lim*lim){R.stats.culled++;continue;}}/* HDF BASE : budget GPU — petits objets lointains écartés (brume) */if(!M3.sphereVisible(planes,x,y,z,rr+.05)){R.stats.culled++;continue;}}
+        const s=Math.sqrt(Math.max(M[0]*M[0]+M[1]*M[1]+M[2]*M[2],M[4]*M[4]+M[5]*M[5]+M[6]*M[6],M[8]*M[8]+M[9]*M[9]+M[10]*M[10])),rr=m.br*s;if(eye&&it.far){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2];if(ex*ex+ey*ey+ez*ez>it.far*it.far){R.stats.culled++;continue;}}/* v77 : distance d'affichage par pièce */if(eye&&rr<2.5){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2],d2=ex*ex+ey*ey+ez*ez,lim=rr<.7?32:rr<1.4?46:60;if(d2>lim*lim){R.stats.culled++;continue;}}/* HDF BASE : budget GPU — petits objets lointains écartés (brume) */if(!M3.sphereVisible(planes,x,y,z,rr+.05)){R.stats.culled++;continue;}}
       culled[n++]=it;}
     return {items:culled,n};};
   // ---------- qualité
@@ -2340,14 +2340,15 @@ function modelLibrary(){const L={},T=M3.translate,S=M3.scale,mul=M3.mul,RX=M3.ro
     m.add(G.slab([[-.9,0],[.9,0],[.8,.68],[-.8,.68]],.05,.03),mul(T(0,1.975,-2.775),RX(.505)),GLASS,3);m.add(G.slab([[-.96,-.04],[.96,-.04],[.86,.72],[-.86,.72]],.05,.03),mul(T(0,1.972,-2.765),RX(.505)),DARK,10);/* pare-brise et son joint */for(const sd of [-1,1])for(const z of [-1.6,-.3,.9])m.add(G.slab([[-.4,0],[.4,0],[.4,.45],[-.4,.45]],.04,.03),mul(T(sd*1.27,2.0,z),RY(sd*Math.PI/2)),GLASS,3);
     m.add(rb(2.3,.3,.3,.08),T(0,.9,-2.9),DARK,10);for(const sd of [-1,1])m.add(rb(.3,.16,.06,.03),T(sd*.85,1.35,-2.86),[.85,.85,.8],14);m.add(G.lathe([[0,.45],[.25,.45],[.3,.38],[.3,0]],20),T(0,2.75,.3),PAINT,19);
     for(const [z,f] of [[-1.85,1],[1.85,0]])for(const sd of [-1,1])wheel(d,sd*1.12,z,.6,.45,f);return d;};
-  L.voiture=()=>{const d=D(),m=d.m;// berline civile
-    m.add(G.loft(zsteps(-2.3,2.3,.08).map(z=>{const n=Math.min(1,(z+2.3)/.25,(2.3-z)/.2),yt=z<-1.0?.95+.05*n:z<1.3?1.0:.98;return {z,pts:G.profile(1.7*(.9+.1*n),1.62,.32,yt,.08,.12,3)};})),I,PAINT,18);
-    const cab=z=>z<-.75?1.0+(z+1.35)/.6*.46:z<.7?1.46:1.46-(z-.7)/.75*.46;m.add(G.loft(zsteps(-1.35,1.45,.07).map(z=>{const yt=cab(z);return {z,pts:G.profile(1.6,1.6-2*(yt-.95)*.32,.95,yt,.03,Math.min(.16,(yt-.95)*.35),3)};})),I,PAINT,18);
+  L.voiture=(lo)=>{const d=D(),m=d.m,ZS=(a,b,st,l)=>lo?l:zsteps(a,b,st),NP=lo?2:3;// berline civile (lo : version allégée vue de loin, v76)
+    m.add(G.loft(ZS(-2.3,2.3,.08,[-2.3,-2.2,-2.05,-1.7,-1.0,-.5,0,.5,1.0,1.3,1.7,2.1,2.2,2.3]).map(z=>{const n=Math.min(1,(z+2.3)/.25,(2.3-z)/.2),yt=z<-1.0?.95+.05*n:z<1.3?1.0:.98;return {z,pts:G.profile(1.7*(.9+.1*n),1.62,.32,yt,.08,.12,NP)};})),I,PAINT,18);
+    const cab=z=>z<-.75?1.0+(z+1.35)/.6*.46:z<.7?1.46:1.46-(z-.7)/.75*.46;m.add(G.loft(ZS(-1.35,1.45,.07,[-1.35,-1.05,-.75,-.4,0,.35,.7,1.05,1.45]).map(z=>{const yt=cab(z);return {z,pts:G.profile(1.6,1.6-2*(yt-.95)*.32,.95,yt,.03,Math.min(.16,(yt-.95)*.35),NP)};})),I,PAINT,18);
     const sl=Math.hypot(.46,.6);m.add(G.slab([[-.7,.05],[.7,.05],[.56,.68],[-.56,.68]],.06,.01),G.basis([1,0,0],[0,.46/sl,.6/sl],[0,.6/sl,-.46/sl],[0,1.0,-1.35]),GLASS,3);
     m.add(G.slab([[-.66,.05],[.66,.05],[.54,.66],[-.54,.66]],.06,.01),G.basis([-1,0,0],[0,.46/sl,-.6/sl],[0,.6/sl,.46/sl],[0,1.0,1.45]),GLASS,3);
     for(const sd of [-1,1]){m.add(G.slab([[-.65,.04],[.6,.04],[.55,.42],[-.6,.42]],.05,.01),mul(T(sd*.79,1.0,0),RY(sd*Math.PI/2)),GLASS,3);m.add(rb(.32,.12,.05,.04),T(sd*.6,.78,-2.3),[.9,.9,.85],14);m.add(rb(.3,.1,.05,.03),T(sd*.6,.8,2.3),[.6,.05,.04],6);}
     m.add(rb(1.74,.18,.16,.06),T(0,.42,-2.33),DARK,10);m.add(rb(1.74,.18,.16,.06),T(0,.42,2.33),DARK,10);
     for(const [z,f] of [[-1.45,1],[1.45,0]])for(const sd of [-1,1])wheel(d,sd*.78,z,.32,.22,f);return d;};
+  Object.defineProperty(L,'_lo',{value:{voiture:()=>L.voiture(true)}});// v76 : niveaux de détail (hors liste des types)
   // ---------------------------------------------------------------- AIR
   L.helico=()=>{const d=D(),m=d.m;// hélicoptère de manœuvre
     m.add(G.loft(zsteps(-3.3,2.6,.12).map(z=>{const n=Math.min(1,Math.sqrt(Math.max(0,(z+3.3)/1.4))),b=Math.min(1,(2.6-z)/1.2);const w=1.15*n*(.6+.4*b),h0=.55+(1-n)*.5+(1-b)*.5,h1=2.55-(1-n)*.7-(1-b)*.55;
@@ -2491,12 +2492,12 @@ function createModelFactory(A){const R=A.R,lib=modelLibrary(),cache=new Map(),pl
       if(d<.35){m.i++;if(m.i>=m.pts.length){if(m.boucle){m.i=0;}else{MOV.delete(nd);nd.data.trajet=null;q.walk=false;q.flee=false;q.pose=m.poseFin||m.pose0;if(m.fin)m.fin(nd);continue;}}continue;}
       const v=Math.min(d,m.v*dt);nd.pos[0]+=dx/d*v;nd.pos[2]+=dz/d*v;nd.pos[1]=A.groundAt(nd.pos[0],nd.pos[2]);const ty=Math.atan2(-dx,-dz);let dy=ty-nd.rot[1];while(dy>Math.PI)dy-=6.2832;while(dy<-Math.PI)dy+=6.2832;nd.rot[1]+=dy*Math.min(1,dt*8);
       q.walk=!m.courir;if(m.courir)q.pose='course';}});
-  const wheelMeshes={tire:R.makeMesh(G.lathe([[-.5,0],[-.5,.33],[-.47,.44],[-.38,.5],[.38,.5],[.47,.44],[.5,.33],[.5,0]],22)),rim:R.makeMesh(G.lathe([[-.52,0],[-.52,.55],[-.42,.62],[.42,.62],[.52,.55],[.52,0]],12))};
+  const wheelMeshes={tire:R.makeMesh(G.lathe([[-.5,0],[-.5,.33],[-.47,.44],[-.38,.5],[.38,.5],[.47,.44],[.5,.33],[.5,0]],22)),rim:R.makeMesh(G.lathe([[-.52,0],[-.52,.55],[-.42,.62],[.42,.62],[.52,.55],[.52,0]],12)),tireLo:R.makeMesh(G.lathe([[-.5,0],[-.5,.38],[-.42,.5],[.42,.5],[.5,.38],[.5,0]],10))};const LOD_V=24;// v76 : au-delà de 24 m, carrosserie et pneus allégés, jantes masquées
   const meshesOf=(key,desc)=>{const parts=desc.m.arrays().map(g=>({mesh:R.makeMesh(g.src),color:g.color,mat:g.mat}));return {parts,nodes:desc.nodes.map(n=>({...n,built:meshesOf(key+'/'+n.name,n.desc)})),wheels:desc.wheels,meta:desc.meta};};
   const build=(B,paint,name)=>{const nd=new Node(name);for(const p of B.parts)nd.addPart(p.mesh,null,p.color[0]<0?paint:p.color,p.mat);
     for(const n of B.nodes){const c=build(n.built,paint,n.name);if(n.pos)c.pos=n.pos.slice();if(n.rot)c.rot=n.rot.slice();if(n.spin){c.data.spin=n.spin;c.data.rpm=n.rpm;}nd.add(c);}
-    B.wheels.forEach((w,i)=>{const wn=new Node((w.front?'roue_av':'roue_ar')+(w.x<0?'_g':'_d'));wn.pos=[w.x,w.r,w.z];wn.data.wheel=w;wn.addPart(wheelMeshes.tire,M3.mul(M3.rotZ(Math.PI/2),M3.scale(2*w.r,w.w,2*w.r)),TIRE,9);
-      wn.addPart(wheelMeshes.rim,M3.mul(M3.rotZ(Math.PI/2),M3.scale(1.1*w.r,w.w*1.04,1.1*w.r)),[.4,.38,.32],7);nd.add(wn);});
+    B.wheels.forEach((w,i)=>{const wn=new Node((w.front?'roue_av':'roue_ar')+(w.x<0?'_g':'_d'));wn.pos=[w.x,w.r,w.z];wn.data.wheel=w;wn.addPart(wheelMeshes.tire,M3.mul(M3.rotZ(Math.PI/2),M3.scale(2*w.r,w.w,2*w.r)),TIRE,9,{maxDist:LOD_V});wn.addPart(wheelMeshes.tireLo,M3.mul(M3.rotZ(Math.PI/2),M3.scale(2*w.r,w.w,2*w.r)),TIRE,9,{minDist:LOD_V});
+      wn.addPart(wheelMeshes.rim,M3.mul(M3.rotZ(Math.PI/2),M3.scale(1.1*w.r,w.w*1.04,1.1*w.r)),[.4,.38,.32],7,{maxDist:LOD_V});nd.add(wn);});
     if(B.meta&&B.meta.light)nd.light={...B.meta.light};nd.data.meta=B.meta;return nd;};
   // teintes par défaut (si ni options.color ni meta.paint) : aéronefs gris, navires gris marine, objets selon leur nature
   // dimensions (longueur, largeur) des véhicules du kit : alignement, déplacements, silhouettes de tir
@@ -2533,7 +2534,7 @@ function createModelFactory(A){const R=A.R,lib=modelLibrary(),cache=new Map(),pl
       const PM={palmier:'palm',pin:'pine',arbre:'tree',buisson:'bush',acacia:'acacia',arbre_jungle:'jungle',cactus:'cactus',rocher:'boulder',herbe:'grass',arbuste:'shrub'};
       if(PM[type]){PL=PL||(plants||Object.fromEntries(Object.entries(plantLibrary()).map(([k,v])=>[k,v.map(p=>({...p,mesh:R.makeMesh(p.src)}))])));const nd=new Node(type);for(const p of PL[PM[type]])nd.addPart(p.mesh,null,o.color&&p.mat===20?o.color:p.color,p.mat,{wind:p.wind});return F.place(nd,o);}
       if(!lib[type])throw new Error('FSM3D : modèle inconnu « '+type+' » ; disponibles : '+F.types().join(', '));
-      let B=cache.get(type);if(!B){B=meshesOf(type,lib[type]());cache.set(type,B);}const nd0=build(B,o.color||(B.meta&&B.meta.paint)||DEF[type]||paint,type);if(VDIM[type]&&!(nd0.data.meta&&nd0.data.meta.length))nd0.data.meta=Object.assign({},nd0.data.meta||{},{length:VDIM[type][0],width:VDIM[type][1]});return F.place(nd0,o);},
+      let B=cache.get(type);if(!B){B=meshesOf(type,lib[type]());cache.set(type,B);}const nd0=build(B,o.color||(B.meta&&B.meta.paint)||DEF[type]||paint,type);{const LOq=lib._lo&&lib._lo[type];if(LOq){let BL=cache.get('lo:'+type);if(!BL){BL=meshesOf('lo:'+type,LOq());cache.set('lo:'+type,BL);}const pt=o.color||(B.meta&&B.meta.paint)||DEF[type]||paint;for(const q of nd0.parts)if(!q.maxDist)q.maxDist=LOD_V;for(const q of BL.parts)nd0.addPart(q.mesh,null,q.color[0]<0?pt:q.color,q.mat,{minDist:LOD_V});}}if(VDIM[type]&&!(nd0.data.meta&&nd0.data.meta.length))nd0.data.meta=Object.assign({},nd0.data.meta||{},{length:VDIM[type][0],width:VDIM[type][1]});return F.place(nd0,o);},
     // placement : {x,z} posé sur le sol (ou sur l'eau pour un navire), {pos,yaw,scale,add:false}
     place(nd,o){if(o.scale)nd.setScale(o.scale);if(o.yaw!==undefined)nd.rot[1]=o.yaw;if(o.pos)nd.pos=o.pos.slice();else if(o.x!==undefined){const meta=nd.data.meta||{},sea=meta.sea,z=o.z||0;nd.pos=[o.x,(sea&&A.water?A.water.level:A.groundAt(o.x,z))+(o.y||0),z];
         // pose sur le relief : véhicules et objets suivent la pente (les bâtiments restent d'aplomb et s'enfoncent légèrement)
@@ -3402,7 +3403,7 @@ class Node{
   find(name){if(this.name===name)return this;for(const c of this.children){const f=c.find(name);if(f)return f;}return null;}
   traverse(fn){fn(this);for(const c of this.children)c.traverse(fn);}
   // pièce : maillage + matrice locale (facultative) + couleur + matériau ; o : {wind, maxDist, cast, name, op}
-  addPart(mesh,M,color,mat=0,o={}){const p={mesh,M:M?new Float32Array(M):null,color:color||[.6,.6,.6],mat,wind:o.wind||0,maxDist:o.maxDist||0,cast:o.cast!==false,name:o.name||'',op:o.op,it:null};this.parts.push(p);return p;}
+  addPart(mesh,M,color,mat=0,o={}){const p={mesh,M:M?new Float32Array(M):null,color:color||[.6,.6,.6],mat,wind:o.wind||0,maxDist:o.maxDist||0,minDist:o.minDist||0,cast:o.cast!==false,name:o.name||'',op:o.op,it:null};this.parts.push(p);return p;}
   setPos(x,y,z){this.pos[0]=x;this.pos[1]=y;this.pos[2]=z;return this;}
   setRot(x,y,z){this.rot[0]=x;this.rot[1]=y;this.rot[2]=z;return this;}
   setScale(x,y=x,z=x){this.scale[0]=x;this.scale[1]=y;this.scale[2]=z;return this;}
@@ -3419,11 +3420,11 @@ function createScene(){const S={root:new Node('scène'),nodes:[]};
   // liste de rendu : une entrée par pièce visible (objets réutilisés d'une image à l'autre, sans allocation)
   S.frame=0;S.collect=(out,eye)=>{S.frame++;S.root.updateWorld(null);let n=0;const walk=nd=>{if(!nd.visible)return;const w=nd.world;
       if(nd.parts.length){const dx=w[12]-eye[0],dy=w[13]-eye[1],dz=w[14]-eye[2],d=Math.sqrt(dx*dx+dy*dy+dz*dz);
-        for(const p of nd.parts){if(p.maxDist&&d>p.maxDist)continue;let it=p.it;if(!it)it=p.it={mesh:p.mesh,M:new Float32Array(16),Mp:new Float32Array(16),mv:false,fr:-9,color:p.color,mat:p.mat,wind:p.wind,cast:true,dust:0,temp:-1,owner:nd};
+        for(const p of nd.parts){if((p.maxDist&&d>p.maxDist)||(p.minDist&&d<p.minDist))continue;let it=p.it;if(!it)it=p.it={mesh:p.mesh,M:new Float32Array(16),Mp:new Float32Array(16),mv:false,fr:-9,color:p.color,mat:p.mat,wind:p.wind,cast:true,dust:0,temp:-1,owner:nd};
           // matrice de l'image précédente (vitesse à l'écran pour le lissage temporel)
           const fresh=it.fr!==S.frame-1;if(!fresh)it.Mp.set(it.M);
           if(p.M)mulTo(it.M,w,p.M);else it.M.set(w);
-          if(fresh)it.Mp.set(it.M);it.fr=S.frame;let mv=false;const A=it.M,B=it.Mp;for(let i=0;i<15;i++){if(Math.abs(A[i]-B[i])>1e-5){mv=true;break;}}it.mv=mv;it.mesh=p.mesh;it.color=p.color;it.mat=p.mat;it.cast=p.cast&&nd.castShadow;it.dust=nd.dust;it.temp=nd.temp;it.op=p.op;out.push(it);n++;}}
+          if(fresh)it.Mp.set(it.M);it.fr=S.frame;let mv=false;const A=it.M,B=it.Mp;for(let i=0;i<15;i++){if(Math.abs(A[i]-B[i])>1e-5){mv=true;break;}}it.mv=mv;it.mesh=p.mesh;it.color=p.color;it.mat=p.mat;it.cast=p.cast&&nd.castShadow;it.dust=nd.dust;it.temp=nd.temp;it.op=p.op;it.far=p.far||0;out.push(it);n++;}}
       if(nd.drawFn)n+=nd.drawFn(out,eye);for(const c of nd.children)walk(c);};walk(S.root);return n;};
   // lumières attachées : node.light = {c:[r,g,b], i, r, offset:[x,y,z], spot:{dir:[x,y,z] local, cone:[cosExt,cosInt]}}
   S.lights=out=>{S.root.traverse(nd=>{if(!nd.visible||!nd.light)return;const L=nd.light,p=M3.xform(nd.world,L.offset||[0,0,0]);const e={p,c:L.c||[1,.9,.75],i:L.i||10,r:L.r||12};
@@ -8818,7 +8819,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '74'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '77'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -12433,10 +12434,10 @@ self.V76 = { VT, construireVT71, maj: (dt, A) => majVT71(dt, A) };
 const CFA = {
   ids: ['ar15', 'g36c', 'mp5', 'ump9'],
   W: {
-    ar15: { n: 'AR-15 SOPMOD', le: 'l’AR-15 SOPMOD', du: 'de l’AR-15 SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 75, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 230, recul: .016, disp: .0022, rech: 2.4, flash: 1.1, yR: .064, mz: [0, .028, -.52], laser: [.039, .044, -.41] },
-    g36c: { n: 'HK-G36C SOPMOD', le: 'le HK-G36C SOPMOD', du: 'du HK-G36C SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 80, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 220, recul: .015, disp: .0024, rech: 2.5, flash: 1.05, yR: .066, mz: [0, .03, -.41], laser: [.039, .04, -.31] },
-    mp5: { n: 'MP5 SOPMOD', le: 'le MP5 SOPMOD', du: 'du MP5 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 1399.90, prixCh: 250, auto: false, cad: 110, puissance: 'Moyenne-Élevée', atout: 'Dissuasion moyenne', dis: .15, portee: 130, recul: .009, disp: .003, rech: 2.6, flash: .75, yR: .088, mz: [0, .035, -.385], laser: [.041, .042, -.285] },
-    ump9: { n: 'UMP9 SOPMOD', le: 'l’UMP9 SOPMOD', du: 'de l’UMP9 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 690.90, prixCh: 100, auto: false, cad: 110, puissance: 'Moyenne', atout: 'Dissuasion moyenne', dis: .15, portee: 110, recul: .011, disp: .0034, rech: 2.3, flash: .8, yR: .072, mz: [0, .03, -.365], laser: [.04, .034, -.27] } },
+    ar15: { n: 'AR-15 SOPMOD', le: 'l’AR-15 SOPMOD', du: 'de l’AR-15 SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 75, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 230, recul: .016, disp: .0022, rech: 2.4, flash: 1.1, yR: .064, mz: [0, .028, -.52], laser: [.039, .04, -.41] },
+    g36c: { n: 'HK-G36C SOPMOD', le: 'le HK-G36C SOPMOD', du: 'du HK-G36C SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 80, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 220, recul: .015, disp: .0024, rech: 2.5, flash: 1.05, yR: .066, mz: [0, .03, -.41], laser: [.039, .036, -.31] },
+    mp5: { n: 'MP5 SOPMOD', le: 'le MP5 SOPMOD', du: 'du MP5 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 1399.90, prixCh: 250, auto: false, cad: 110, puissance: 'Moyenne-Élevée', atout: 'Dissuasion moyenne', dis: .15, portee: 130, recul: .009, disp: .003, rech: 2.6, flash: .75, yR: .088, mz: [0, .035, -.385], laser: [.041, .038, -.285] },
+    ump9: { n: 'UMP9 SOPMOD', le: 'l’UMP9 SOPMOD', du: 'de l’UMP9 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 690.90, prixCh: 100, auto: false, cad: 110, puissance: 'Moyenne', atout: 'Dissuasion moyenne', dis: .15, portee: 110, recul: .011, disp: .0034, rech: 2.3, flash: .8, yR: .072, mz: [0, .03, -.365], laser: [.04, .03, -.27] } },
   OPT: {
     eotech: { n: 'EOTech EXPS3 + magnifier ×3', prix: 0, d: 'Viseur holographique (réticule 68 MOA + point 1 MOA), parallaxe et reflets réalistes, magnifier ×3 rabattable. Fourni avec chaque arme.' },
     t2: { n: 'Viseur T2', prix: 1600, d: 'Point rouge 2 MOA sur rehausse : visée accrue (zoom ×1,2), stabilité élevée (recul −30 %, dispersion −40 %). Compatible magnifier ×3.' },
@@ -12566,11 +12567,13 @@ function cfTherm(yR, zc) { const y = yR, h0 = y + .038; return [B_(.03, .012, .0
 function cfNVG(yR, zc) { const y = yR, h0 = y + .038; return [B_(.03, .012, .06, 0, y + .006, zc + .01, CK.noir2), B_(.024, .02, .04, 0, y + .019, zc + .01, CK.noir2), Cz(.02, .18, 0, h0, zc, [.08, .1, .08], 10), Cz(.0275, .042, 0, h0, zc - .1, [.08, .1, .08], 10), Cz(.0235, .003, 0, h0, zc - .1215, [.05, .14, .09], 14),
   Cz(.019, .03, 0, h0, zc + .102, CK.caout, 4), Cz(.0118, .088, -.033, h0 + .004, zc - .055, CK.noir, 7), Cz(.0105, .003, -.033, h0 + .004, zc - .1, [.25, .03, .03], 14), B_(.008, .016, .02, -.022, h0 + .004, zc - .05, CK.noir), B_(.024, .02, .05, 0, h0 + .028, zc - .01, [.08, .1, .08]), Cx(.007, .012, .024, h0, zc + .03, CK.noir2, 7)]; }
 // AN/PEQ-15 (ATPIAL) « NGAL » : 117 × 71 × 41 mm, monté au rail de 3 h : lasers visible et IR co-alignés, illuminateur IR focalisable, compartiment de pile CR123, sélecteur rotatif à l'arrière
-function cfNGAL(xc, y, zc) { const T = [.44, .4, .3], T2 = [.37, .33, .25], zf = zc - .0585; return [B_(.012, .02, .064, xc - .023, y, zc + .01, CK.noir, 7), B_(.036, .05, .117, xc, y, zc, T), B_(.032, .004, .11, xc, y + .026, zc, T2), Cz(.0095, .072, xc - .004, y + .03, zc + .012, T), Cz(.0102, .006, xc - .004, y + .03, zc + .051, CK.noir2, 7),
-  Cz(.0045, .003, xc - .008, y + .012, zf - .001, CK.verre, 14), Cz(.0045, .003, xc + .006, y + .012, zf - .001, CK.verre, 14), Cz(.0095, .006, xc, y - .012, zf - .002, CK.noir2, 7), Cz(.0078, .002, xc, y - .012, zf - .0055, [.05, .05, .07], 14),
-  Cz(.0085, .008, xc + .004, y - .006, zc + .062, CK.noir2, 7), B_(.002, .008, .004, xc + .004, y - .006, zc + .067, CK.acierC, 7), B_(.012, .004, .016, xc - .006, y + .0285, zc - .02, CK.caout, 4), B_(.012, .004, .016, xc + .008, y + .0285, zc - .02, CK.caout, 4),
-  Cx(.005, .004, xc + .019, y + .01, zc - .03, CK.noir2, 7), Cx(.005, .004, xc + .019, y - .006, zc - .03, CK.noir2, 7)]; }
+function cfNGAL(xc, y, zc) { const T = [.075, .076, .082], T2 = [.058, .059, .064], zf = zc - .0585; return [B_(.012, .018, .064, xc - .023, y, zc + .01, CK.noir, 7), B_(.036, .034, .117, xc, y, zc, T, 10), B_(.032, .003, .11, xc, y + .0175, zc, T2, 10), Cz(.0072, .064, xc - .004, y + .018, zc + .014, T, 10), Cz(.008, .005, xc - .004, y + .018, zc + .048, CK.noir2, 7),
+  Cz(.0042, .003, xc - .008, y + .008, zf - .001, CK.verre, 14), Cz(.0042, .003, xc + .006, y + .008, zf - .001, CK.verre, 14), Cz(.0085, .006, xc, y - .007, zf - .002, CK.noir2, 7), Cz(.0072, .002, xc, y - .007, zf - .0055, [.05, .05, .07], 14),
+  Cz(.0075, .008, xc + .004, y - .005, zc + .062, CK.noir2, 7), B_(.002, .007, .004, xc + .004, y - .005, zc + .067, CK.acierC, 7), B_(.01, .003, .014, xc - .006, y + .019, zc - .02, CK.caout, 4), B_(.01, .003, .014, xc + .008, y + .019, zc - .02, CK.caout, 4),
+  Cx(.0045, .004, xc + .019, y + .006, zc - .03, CK.noir2, 7), Cx(.0045, .004, xc + .019, y - .006, zc - .03, CK.noir2, 7)]; }
 function cfPoignee(z, y, col = CK.fde) { return [B_(.026, .072, .03, 0, y - .036, z, col, 10, -.06), B_(.03, .012, .034, 0, y - .074, z - .003, col, 10, -.06), ...[0, 1, 2].map(i => B_(.027, .004, .031, 0, y - .015 - i * .018, z, CK.fde2, 10, -.06)), B_(.004, .022, .05, -.021, y + .02, z + .06, CK.caout, 4)]; }
+// raccord poignée pistolet → boîtier : prolonge la poignée (même inclinaison) jusque dans le boîtier
+function cfCol(w, d, y, z, h, a, yr, col) { const c = Math.cos(a), s = Math.sin(a), ty = y + h / 2 * c - .006 * c, tz = z + h / 2 * s - .006 * s, L = (yr - ty) / c + .006; return B_(w, L, d, 0, ty + L / 2 * c, tz + L / 2 * s, col, 10, a); }
 // ---- les quatre armes aux cotes réelles (repère : poignée au poing droit, canon vers -z, 1 unité = 1 m)
 // AR-15 / M4A1 SOPMOD Block II : canon 14,5" (368 mm) + cache-flamme, rail RIS II 12,25" (311 mm) FDE, longueur 800 à 883 mm (crosse SOPMOD)
 // HK G36C : 720 / 500 mm, canon 228 mm, largeur 64 mm, hauteur 278 mm avec chargeur, crosse squelette repliable à droite
@@ -12579,7 +12582,7 @@ function cfPoignee(z, y, col = CK.fde) { return [B_(.026, .072, .03, 0, y - .036
 function cfModele(id) { const N = CK.noir, N2 = CK.noir2, P = [];
   if (id === 'ar15') { const y = .028, F = CK.fde, F2 = CK.fde2;
     P.push(B_(.024, .034, .16, 0, .004, -.01, N, 7), B_(.028, .045, .07, 0, -.022, -.075, N, 7), B_(.031, .006, .074, 0, -.045, -.075, N, 7), B_(.004, .004, .054, 0, -.036, .0, N, 7), B_(.005, .016, .005, 0, -.024, -.008, CK.acier, 7, .3), B_(.004, .02, .004, 0, -.026, -.026, N, 7),
-      B_(.03, .1, .044, 0, -.07, .035, F, 10, .32), ...[0, 1, 2].map(i => B_(.031, .004, .04, 0, -.045 - i * .022, .03 + i * .007, F2, 10, .32)), B_(.026, .034, .178, 0, .038, -.026, N, 7), ...cfRail(0, .058, -.026, .178, 11),
+      B_(.03, .1, .044, 0, -.07, .035, F, 10, -.32), ...[0, 1, 2].map(i => B_(.031, .004, .04, 0, -.045 - i * .022, .03 + i * .007, F2, 10, -.32)), B_(.026, .034, .178, 0, .038, -.026, N, 7), ...cfRail(0, .058, -.026, .178, 11),
       B_(.002, .012, .04, .0131, .036, -.02, [.01, .01, .012], 7), B_(.004, .016, .044, .0145, .036, -.02, N2, 7), Cz(.0062, .026, .0165, .043, .03, N, 7), Cz(.0072, .006, .0165, .043, .045, CK.acier, 7), B_(.006, .016, .012, .015, .046, .043, N, 7),
       B_(.042, .008, .022, 0, .052, .072, N, 7), B_(.01, .006, .012, -.019, .052, .076, N2, 7), B_(.01, .006, .012, .019, .052, .076, N2, 7), Cz(.0155, .2, 0, y, .163, N, 7), Cz(.019, .012, 0, y, .069, N2, 7), B_(.004, .01, .01, .0145, -.01, -.04, N2, 7), B_(.003, .02, .008, -.0135, .0, -.07, N2, 7), B_(.003, .02, .008, .0135, .0, -.07, N2, 7),
       B_(.042, .062, .13, 0, .02, .232, F, 10), Cz(.012, .12, .02, .036, .228, F2, 10), Cz(.012, .12, -.02, .036, .228, F2, 10), B_(.046, .12, .022, 0, .004, .3, CK.caout, 4), B_(.03, .04, .09, 0, -.026, .255, F, 10), B_(.012, .012, .03, 0, -.008, .205, N2, 7),
@@ -12587,28 +12590,36 @@ function cfModele(id) { const N = CK.noir, N2 = CK.noir2, P = [];
       B_(.04, .04, .311, 0, .032, -.2705, F, 7), ...cfRail(0, .055, -.2705, .311, 19, 'y', 1, F), ...cfRail(.023, .032, -.2705, .311, 19, 'x', 1, F), ...cfRail(-.023, .032, -.2705, .311, 19, 'x', -1, F), ...cfRail(0, .009, -.2705, .311, 19, 'y', -1, F),
       ...cfCouvre(-.023, .032, -.26, .18, 'x', -1), ...cfCouvre(.023, .032, -.18, .09, 'x', 1), ...cfCouvre(0, .009, -.17, .1, 'y', -1), B_(.046, .046, .012, 0, .032, -.12, F2, 7), B_(.046, .046, .01, 0, .032, -.422, F2, 7),
       Cz(.0085, .052, 0, y, -.452, CK.acier, 7), Cz(.011, .046, 0, y, -.497, N, 7), ...[0, 1, 2].map(i => B_(.0018, .02, .03, Math.cos(i * TAU / 3) * .0102, y + Math.sin(i * TAU / 3) * .0102, -.502, [.01, .01, .01], 7, 0, 0, i * TAU / 3)), B_(.012, .012, .03, 0, .066, -.405, N, 7), B_(.004, .02, .004, 0, .078, -.395, N, 7, -1.3),
-      ...cfNGAL(.047, .032, -.35), ...cfPoignee(-.3, .011)); }
+      ...cfNGAL(.047, .032, -.35), ...cfPoignee(-.3, .011), cfCol(.028, .04, -.07, .035, .1, -.32, -.013, F)); }
   else if (id === 'g36c') { const y = .03, Pp = CK.poly;
-    P.push(B_(.04, .07, .27, 0, .02, -.035, Pp), B_(.042, .01, .27, 0, .056, -.035, Pp), ...cfRail(0, .062, -.045, .25, 15), B_(.012, .008, .03, 0, .05, -.14, N2, 10), B_(.006, .012, .034, 0, .064, -.13, N2, 10, .4), B_(.038, .03, .07, 0, -.025, -.09, Pp), B_(.032, .1, .045, 0, -.07, .04, Pp, 10, .3), ...[0, 1, 2].map(i => B_(.033, .004, .04, 0, -.045 - i * .022, .036 + i * .007, CK.polyG, 10, .3)),
+    P.push(B_(.04, .07, .27, 0, .02, -.035, Pp), B_(.042, .01, .27, 0, .056, -.035, Pp), ...cfRail(0, .062, -.045, .25, 15), B_(.012, .008, .03, 0, .05, -.14, N2, 10), B_(.006, .012, .034, 0, .064, -.13, N2, 10, .4), B_(.038, .03, .07, 0, -.025, -.09, Pp), B_(.032, .1, .045, 0, -.07, .04, Pp, 10, -.3), ...[0, 1, 2].map(i => B_(.033, .004, .04, 0, -.045 - i * .022, .036 + i * .007, CK.polyG, 10, -.3)),
       B_(.03, .006, .062, 0, -.036, .0, Pp), B_(.03, .03, .006, 0, -.022, -.032, Pp), B_(.005, .016, .005, 0, -.022, -.006, CK.acier, 7, .3), B_(.006, .008, .02, 0, -.045, -.05, N2), B_(.002, .014, .04, .021, .028, -.02, [.01, .01, .012], 7), Cz(.006, .02, .022, .035, .06, N2, 7), B_(.044, .02, .03, 0, .012, .085, Pp),
       B_(.044, .046, .15, 0, .028, -.245, Pp), ...cfRail(0, .054, -.245, .15, 9), ...cfRail(.025, .028, -.245, .14, 8, 'x', 1), ...cfRail(-.025, .028, -.245, .14, 8, 'x', -1), ...cfRail(0, .002, -.245, .14, 8, 'y', -1), ...[0, 1, 2].map(i => B_(.002, .008, .03, .0225, .03, -.2 - i * .045, [.012, .012, .014], 10)),
       Cz(.0085, .045, 0, y, -.3425, CK.acier, 7), Cz(.012, .04, 0, y, -.38, N, 7), ...[0, 1, 2, 3].map(i => B_(.004, .004, .022, Math.cos(i * PI / 2 + .785) * .011, y + Math.sin(i * PI / 2 + .785) * .011, -.408, N, 7)),
-      B_(.038, .05, .03, 0, .02, .105, Pp), B_(.03, .012, .2, 0, .036, .21, Pp), B_(.03, .012, .19, 0, -.018, .21, Pp, 10, .1), B_(.012, .05, .012, 0, .01, .16, Pp), B_(.034, .114, .026, 0, .008, .312, CK.caout, 4), Cz(.008, .012, -.02, .02, .105, N2, 7), ...cfNGAL(.047, .028, -.25), ...cfPoignee(-.25, -.001, CK.poly)); }
+      B_(.038, .05, .03, 0, .02, .105, Pp), B_(.03, .012, .2, 0, .036, .21, Pp), B_(.03, .012, .19, 0, -.018, .21, Pp, 10, .1), B_(.012, .05, .012, 0, .01, .16, Pp), B_(.034, .114, .026, 0, .008, .312, CK.caout, 4), Cz(.008, .012, -.02, .02, .105, N2, 7), ...cfNGAL(.047, .028, -.25), ...cfPoignee(-.25, -.001, CK.poly), cfCol(.03, .041, -.07, .04, .1, -.3, -.015, Pp)); }
   else if (id === 'mp5') { const y = .035, St = [.05, .05, .055];
     P.push(B_(.038, .05, .27, 0, .03, -.035, St, 7), Cz(.019, .27, 0, .055, -.035, St, 7), ...[0, 1, 2].map(i => B_(.0395, .006, .02, 0, .012, -.14 + i * .09, N2, 7)), Cz(.0095, .14, 0, .072, -.24, St, 7), B_(.006, .008, .032, -.016, .074, -.29, N, 7, 0, -.6), Cz(.0105, .01, 0, .072, -.308, N2, 7), Cz(.02, .012, 0, .055, .1, N2, 7),
       B_(.024, .008, .16, 0, .08, -.03, N, 7), ...cfRail(0, .082, -.03, .16, 10), B_(.006, .02, .03, .016, .07, -.03, N2, 7), B_(.006, .02, .03, -.016, .07, -.03, N2, 7), B_(.03, .035, .02, 0, .082, -.3, St, 7), B_(.004, .018, .004, 0, .09, -.3, N2, 7), Cx(.012, .028, 0, .085, .07, St, 7),
       B_(.046, .05, .11, 0, .03, -.225, N), ...cfRail(.025, .03, -.225, .1, 6, 'x', 1), ...cfRail(-.025, .03, -.225, .1, 6, 'x', -1), ...cfRail(0, .002, -.225, .1, 6, 'y', -1), Cz(.008, .075, 0, y, -.3175, CK.acier, 7), Cz(.011, .03, 0, y, -.37, N, 7), ...[0, 1, 2].map(i => B_(.003, .006, .01, Math.cos(i * TAU / 3) * .012, y + Math.sin(i * TAU / 3) * .012, -.36, N, 7)),
-      B_(.03, .035, .1, 0, -.01, .02, CK.polyG), B_(.033, .1, .045, 0, -.07, .045, CK.polyG, 10, .3), ...[0, 1, 2].map(i => B_(.034, .004, .04, 0, -.045 - i * .022, .04 + i * .007, CK.poly, 10, .3)), B_(.03, .006, .055, 0, -.04, -.005, CK.polyG), B_(.005, .016, .005, 0, -.024, -.006, CK.acier, 7, .3), B_(.028, .04, .045, 0, 0, -.105, St, 7), B_(.004, .02, .012, 0, -.025, -.08, N, 7),
+      B_(.03, .035, .1, 0, -.01, .02, CK.polyG), B_(.033, .1, .045, 0, -.07, .045, CK.polyG, 10, -.3), ...[0, 1, 2].map(i => B_(.034, .004, .04, 0, -.045 - i * .022, .04 + i * .007, CK.poly, 10, -.3)), B_(.03, .006, .055, 0, -.04, -.005, CK.polyG), B_(.005, .016, .005, 0, -.024, -.006, CK.acier, 7, .3), B_(.028, .04, .045, 0, 0, -.105, St, 7), B_(.004, .02, .012, 0, -.025, -.08, N, 7),
       Cz(.006, .2, .016, .035, .2, CK.acierC, 7), Cz(.006, .2, -.016, .035, .2, CK.acierC, 7), B_(.04, .1, .02, 0, .012, .3, N, 7), B_(.042, .104, .012, 0, .012, .314, CK.caout, 4), B_(.04, .016, .02, 0, .035, .11, N, 7), ...cfNGAL(.049, .03, -.225), ...cfPoignee(-.23, -.001, CK.noir)); }
   else if (id === 'ump9') { const y = .03, Pp = [.085, .085, .09];
     P.push(B_(.044, .075, .345, 0, .025, -.0875, Pp), ...cfRail(0, .066, -.0875, .33, 20), B_(.008, .008, .04, -.024, .055, -.22, N2, 10), B_(.004, .012, .03, -.026, .055, -.245, N, 7), ...cfRail(.025, .02, -.21, .1, 6, 'x', 1), ...cfRail(-.025, .02, -.21, .1, 6, 'x', -1), ...cfRail(0, -.016, -.21, .1, 6, 'y', -1),
-      B_(.032, .1, .045, 0, -.075, .035, Pp, 10, .25), B_(.03, .09, .014, 0, -.05, .085, Pp, 10, .15), B_(.03, .012, .06, 0, -.118, .065, Pp), B_(.032, .006, .08, 0, -.04, -.02, Pp), B_(.005, .016, .005, 0, -.026, -.01, CK.acier, 7, .3), B_(.04, .035, .05, 0, -.025, -.1, Pp), B_(.003, .016, .022, .021, -.01, -.06, N2, 10),
-      Cz(.009, .07, 0, y, -.295, CK.acier, 7), Cz(.012, .035, 0, y, -.3475, N, 7), B_(.002, .016, .05, .0225, .03, -.03, [.012, .012, .014], 10), B_(.04, .05, .03, 0, .022, .1, Pp), B_(.03, .012, .2, 0, .045, .205, Pp), B_(.03, .012, .18, 0, -.02, .215, Pp, 10, .12), B_(.034, .11, .022, 0, .012, .315, CK.caout, 4), ...cfNGAL(.048, .022, -.21), ...cfPoignee(-.2, -.019, CK.noir)); }
+      B_(.032, .1, .045, 0, -.075, .035, Pp, 10, -.25), B_(.03, .09, .014, 0, -.05, .085, Pp, 10, .15), B_(.03, .012, .06, 0, -.118, .065, Pp), B_(.032, .006, .08, 0, -.04, -.02, Pp), B_(.005, .016, .005, 0, -.026, -.01, CK.acier, 7, .3), B_(.04, .035, .05, 0, -.025, -.1, Pp), B_(.003, .016, .022, .021, -.01, -.06, N2, 10),
+      Cz(.009, .07, 0, y, -.295, CK.acier, 7), Cz(.012, .035, 0, y, -.3475, N, 7), B_(.002, .016, .05, .0225, .03, -.03, [.012, .012, .014], 10), B_(.04, .05, .03, 0, .022, .1, Pp), B_(.03, .012, .2, 0, .045, .205, Pp), B_(.03, .012, .18, 0, -.02, .215, Pp, 10, .12), B_(.034, .11, .022, 0, .012, .315, CK.caout, 4), ...cfNGAL(.048, .022, -.21), ...cfPoignee(-.2, -.019, CK.noir), cfCol(.03, .041, -.075, .035, .1, -.25, -.0125, Pp)); }
   return P; }
-function cfChargeur(id) { if (id === 'ar15') return [B_(.024, .06, .062, 0, 0, 0, CK.noir2), B_(.024, .058, .06, 0, -.054, -.012, CK.noir2, 10, -.2), B_(.024, .05, .056, 0, -.102, -.03, CK.noir2, 10, -.32), B_(.028, .012, .064, 0, -.132, -.044, CK.noir, 10, -.36), ...[0, 1, 2].map(i => B_(.0255, .004, .05, 0, -.02 - i * .03, -.004 - i * .006, CK.noir, 10, -.15 * i))];
-  if (id === 'g36c') return [B_(.03, .07, .062, 0, -.01, 0, [.24, .2, .15], 10), B_(.03, .07, .06, 0, -.08, -.018, [.24, .2, .15], 10, -.22), B_(.03, .04, .056, 0, -.135, -.034, [.24, .2, .15], 10, -.3), B_(.034, .012, .064, 0, -.162, -.046, [.12, .1, .08], 10, -.32), B_(.006, .012, .01, .018, -.02, .02, [.2, .17, .13], 10), B_(.006, .012, .01, -.018, -.02, .02, [.2, .17, .13], 10), B_(.006, .012, .01, .018, -.05, .02, [.2, .17, .13], 10), B_(.006, .012, .01, -.018, -.05, .02, [.2, .17, .13], 10)];
-  if (id === 'mp5') return [B_(.02, .05, .034, 0, -.02, 0, CK.noir, 7, -.15), B_(.02, .05, .032, 0, -.065, -.012, CK.noir, 7, -.35), B_(.02, .05, .03, 0, -.108, -.032, CK.noir, 7, -.55), B_(.024, .01, .035, 0, -.135, -.052, CK.noir2, 7, -.6)];
-  return [B_(.022, .06, .036, 0, -.03, 0, CK.noir2, 10, -.05), B_(.022, .06, .035, 0, -.088, -.006, CK.noir2, 10, -.14), B_(.022, .05, .034, 0, -.138, -.016, CK.noir2, 10, -.22), B_(.026, .012, .038, 0, -.166, -.024, CK.noir, 10, -.24), ...[0, 1].map(i => B_(.023, .003, .03, 0, -.04 - i * .05, -.002 - i * .006, CK.noir, 10, -.1 - i * .08))]; }
+// chargeur courbe continu : tranches qui se chevauchent le long d'un arc. Convention : a < 0 = courbure vers l'avant ; la tranche est tournée de -a (rx > 0 = bas vers l'avant, rx < 0 = bas vers la crosse)
+function cfArc(w, d, L, a0, a1, n, y0, col, mat = 10) { const P = [], F = [], ds = L / n; let y = y0, z = 0;
+  for (let i = 0; i < n; i++) { const a = a0 + (a1 - a0) * (i + .5) / n, c = Math.cos(a), s = Math.sin(a); F.push([y - c * ds / 2, z + s * ds / 2, -a]); P.push(B_(w, ds * 1.15, d, 0, y - c * ds / 2, z + s * ds / 2, col, mat, -a)); y -= c * ds; z += s * ds; }
+  return { P, F, y, z }; }
+function cfChargeur(id) { const at = (R, k) => R.F[Math.min(R.F.length - 1, k)];
+  if (id === 'ar15') { const R = cfArc(.024, .062, .165, 0, -.42, 14, .03, CK.noir2), P = R.P; for (const k of [2, 6, 10]) { const f = at(R, k); P.push(B_(.0255, .005, .052, 0, f[0], f[1], CK.noir, 10, f[2])); }
+    P.push(B_(.028, .012, .066, 0, R.y - .002, R.z - .002, CK.noir, 10, .42)); return P; }
+  if (id === 'g36c') { const C = [.24, .2, .15], R = cfArc(.03, .062, .19, 0, -.44, 16, .025, C), P = R.P; P.push(B_(.034, .012, .066, 0, R.y - .002, R.z - .002, [.12, .1, .08], 10, .44));
+    for (const k of [1, 4]) { const f = at(R, k); P.push(B_(.006, .012, .01, .018, f[0], f[1] + .022, [.2, .17, .13], 10, f[2]), B_(.006, .012, .01, -.018, f[0], f[1] + .022, [.2, .17, .13], 10, f[2])); } return P; }
+  if (id === 'mp5') { const R = cfArc(.02, .034, .15, -.08, -.66, 14, .005, CK.noir, 7), P = R.P; P.push(B_(.024, .01, .036, 0, R.y - .002, R.z - .002, CK.noir2, 7, .66)); return P; }
+  const R = cfArc(.022, .036, .18, -.02, -.3, 14, 0, CK.noir2), P = R.P; for (const k of [2, 6]) { const f = at(R, k); P.push(B_(.023, .003, .03, 0, f[0], f[1], CK.noir, 10, f[2])); }
+  P.push(B_(.026, .012, .038, 0, R.y - .002, R.z - .002, CK.noir, 10, .3)); return P; }
 function cfSelecteur() { return [Cx(.005, .004, 0, 0, 0, CK.acier, 7), B_(.004, .005, .02, -.002, 0, .009, CK.noir2, 7)]; }
 const CF_SEL = { ar15: [-.0135, .002, .012], g36c: [-.021, -.006, .012], mp5: [-.017, -.012, .03], ump9: [-.018, -.012, .012] };
 const CF_GRIP = { ar15: [-.3, .011], g36c: [-.25, -.001], mp5: [-.23, -.001], ump9: [-.2, -.019] };
@@ -12622,7 +12633,7 @@ function construireConf(A) { if (CFA.built) return; CFA.built = true; if (self._
     sp.mag = cfNoeud(A, 'mag', cfChargeur(id), root); sp.mag.pos = CF_MAG[id].slice(); sp.mag0 = CF_MAG[id].slice(); sp.sel = cfNoeud(A, 'sel', cfSelecteur(), root); sp.sel.pos = CF_SEL[id].slice();
     const G = H.gauche, zG = G.z - .017, OUTb = M3.mul(M3.translate(-.012, G.y - .03, zG + .02), M3.mul(M3.rotY(-.95), M3.rotX(.42)));
     sp.mainG = cfNoeud(A, 'mainG', G.main, root, M3.translate(0, G.y + .004, zG)); cfNoeud(A, 'brasG', G.bras, sp.mainG, OUTb);
-    sp.led = cfNoeud(A, 'led', [B_(.004, .002, .004, W.laser[0] + .02, W.laser[1] + .0175, W.laser[2] + .08, CK.led, 8)], root); }
+    sp.led = cfNoeud(A, 'led', [B_(.004, .002, .004, W.laser[0] + .02, W.laser[1] + .011, W.laser[2] + .08, CK.led, 8)], root); }
   // LBD 40 : EOTech + magnifier sur le rail (l'ancien viseur a été retiré du modèle)
   const lbd = VM.nodes.lbd; if (lbd) { const sp = VM.sub.lbd || (VM.sub.lbd = {}); const OP = cfConstruireOptiques(A, lbd, .066, -.04, false); sp.opt = OP.O; sp.loupeB = OP.lb; sp.loupe = OP.lt; OP.O.t2.visible = false; }
   for (const id of ['flash', 'glad']) { const H = cfMains(-.2, 0); const P = id === 'flash' ? [Cy(.026, .1, 0, .01, -.03, [.22, .26, .2], 6), ...[0, 1, 2, 3, 4, 5].map(i => Cy(.0055, .004, Math.cos(i * PI / 3) * .024, .03, -.03 + Math.sin(i * PI / 3) * .024, [.02, .02, .02], 10)), Cy(.014, .026, 0, .073, -.03, CK.acierC, 7), B_(.008, .07, .012, .018, .05, -.03, CK.acierC, 7, 0, 0, -.15), ['c', [.011, .002], [-.012, .087, -.03], [PI / 2, 0, 0], CK.acierC, 7]]
@@ -12956,6 +12967,20 @@ function majAcces73(dt) { ACCES73.t -= dt; if (ACCES73.t > 0 || !S || UI.titre |
     ob._ok = true; if (best < 2.4 && best + .15 > ob._r0) ob.r = Math.max(ob._r0, best + .3); } }
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majAcces73(dt || .016); } catch (e) { } return _mp(dt, A); }; }
 self.V78 = { MIS73, misGaranties: () => misGaranties(self.A, true), phasePop, rangerAchats: pl => rangerAchats(pl), finirEtape: (m, i, e) => finirEtape(m, i, e), HEURE: h => { if (h !== undefined) { HEURE = h; S.heure = h; } return HEURE; }, OBJ: () => OBJETS, dlBesoin, navLibre: (x, z) => navLibre(x, z), navProche: (x, z) => navProche(x, z), segLibre: (a, b, c, d) => segLibre(a, b, c, d), liftPos: H => liftPos(H), SHOPPOS: () => SHOPPOS, ACCES73 };
+
+// ================================================================= v77 — LOINTAINS (budget triangles depuis les bords de la carte)
+// pièce.far (m) : écartée au-delà de cette distance au centre réel de la pièce (R.cull, sphère englobante). Passe toutes les 1,5 s sur les nœuds de premier niveau
+// (une seule fois par nœud, __lo77) : voitures entières à 62 m (la caisse, r < 2,5, l'était déjà à 60 m : seuls les pare-chocs restaient), lots de mobilier
+// métallique (decor-*, mat 22 et 12) à 135 m, petites pièces (< 8 m de rayon) des commerces et intérieurs à 100 m. Émissifs (8, 31), signalétique, marques et bâtiments exclus.
+{ const LO77 = { n: 0 }; self.V79 = LO77;
+  const sc = m => m ? Math.sqrt(Math.max(m[0] * m[0] + m[1] * m[1] + m[2] * m[2], m[4] * m[4] + m[5] * m[5] + m[6] * m[6], m[8] * m[8] + m[9] * m[9] + m[10] * m[10])) : 1;
+  const EXCL = /^(cite|arbre|train|fenetres|horizon|neon|secteur|ciel|siel|vm-|marque|balisage|OBJ|proj|feux|gyro|strobe|eclairage|enseigne|led|voyant|stade|guirlande|riviere|auto-loin|grue|habillage|quartier|facades|gare|batiment|poste-facade|vitrines)/;
+  LO77.passe = () => { const A = self.A; if (!A || !A.scene) return; for (const nd of A.scene.root.children) { if (nd.__lo77) continue; const nm = nd.name || '';
+      if (nm === 'voiture') nd.traverse(c => { for (const p of c.parts) if (!p.far) p.far = 62; });
+      else if (/^decor-/.test(nm)) { for (const p of nd.parts) if ((p.mat === 22 || p.mat === 12) && !p.far) p.far = 135; }
+      else if (!EXCL.test(nm)) nd.traverse(c => { const s1 = sc(c.world); for (const p of c.parts) { if (p.mat === 8 || p.mat === 31 || p.far) continue; const r = (p.mesh.br || 0) * s1 * sc(p.M); if (r > 0 && r < 8) p.far = 100; } });
+      nd.__lo77 = true; LO77.n++; } };
+  setInterval(() => { try { LO77.passe(); } catch (e) {} }, 1500); }
 
 // ================================================================= v67 — DOSSARDS « SUGE » (agents de sûreté FSM Rail) et « SNCF » (contrôleurs) + gare aux codes couleur franciliens
 // Quad texturé posé dans l'espace de repos du personnage (dos du buste, os Chest) et dessiné avec la matrice d'articulation de l'os : il suit la posture, la morphologie et l'animation.
@@ -13393,6 +13418,20 @@ v74 — ARMES CONFRONTATION AUX COTES RÉELLES
 - cfModele refait d'après les fiches techniques : AR-15 / M4A1 SOPMOD Block II (canon 368 mm + cache-flamme, bouche à z -0,52, rail RIS II 311 mm FDE avec couvre-rails noirs cfCouvre, crosse SOPMOD, longueur ≈ 0,82 m), HK G36C (500 mm crosse repliée, canon 228 mm, chargeur translucide jusqu'à 278 mm de haut, bouche -0,41), MP5A3 (550 mm, canon 225 mm, tambour de hausse, garde-main à rails, bouche -0,385), UMP9 (450 mm, canon 200 mm, chargeur courbe, bouche -0,365).
 - Optiques : EOTech EXPS3 96,5 × 58,4 × 73,7 mm (fenêtre 30,5 × 21,6 mm, levier QD, boutons à gauche, pile transversale) ; Aimpoint T-2 68 mm, Ø 41 × 36 mm, embase LRP, volets ; magnifier G33 (tube 1", oculaire Ø 38 mm, 99 mm, embase STS) ; AN/PEQ-15 117 × 71 × 41 mm au rail de 3 h (lasers co-alignés, illuminateur IR, pile CR123, sélecteur rotatif).
 - Calque : fenêtre EOTech x ±0,0153, y yR+0,0272 → yR+0,0488, avant zc-0,044, arrière zc+0,028 ; tube T2 rayon 0,0105, faces zc+0,01 ± 0,034. W.mz / W.laser / LED NGAL recalés.
+
+v75 — FINITIONS DES MODÈLES (photos studio)
+- Chargeurs : cfArc(w, d, L, a0, a1, n, y0) = tranches qui se chevauchent le long d'un arc (rotation de la tranche = -a ; rx > 0 → bas vers l'avant, rx < 0 → bas vers la crosse). Courbe continue sur les 4 armes, nervures/ergots posés sur les repères R.F.
+- Poignées pistolet : inclinaison corrigée (rx négatif = bas vers la crosse ; avant elles penchaient vers l'avant) ; cfCol prolonge la poignée (même inclinaison) jusqu'au bas du boîtier (AR -0,013, G36C -0,015, UMP -0,0125 ; MP5 déjà raccordée).
+- NGAL : boîtier noir abaissé (34 mm de haut au lieu de 50) centré sur le rail de 3 h, le garde-main reste visible ; W.laser y -0,004 et LED à W.laser[1]+0,011.
+
+v76 — NIVEAUX DE DÉTAIL DES VOITURES (budget 500 k tri/image sur iPad)
+- Mesure v75 (1028 positions × 8 directions, iPad 4:3, qualité basse) : max 517 k, moyenne 402 k ; les voitures (A.make('voiture'), ~5,4 k tri chacune dont 1,7 k de roues) pesaient 41 % de l'image la plus chargée (~53 voitures visibles).
+- Moteur : pièce.minDist (collect : masquée en deçà, comme maxDist au-delà ; addPart o.minDist). modelLibrary : L._lo (non énumérable) = { voiture: L.voiture(true) } (lofts à sections choisies, profils n=2). Fabrique : LOD_V = 24 m ; pièces racine maxDist 24, pièces allégées minDist 24 ; roues : pneu 22 → pneu tireLo 10 segments au-delà de 24 m, jante masquée.
+- Les effets qui masquent des pièces (épave, vitrage brisé : maxDist = 1e-6) s'appliquent aux deux niveaux (mêmes matériaux).
+
+v77 — LOINTAINS (vues depuis les bords)
+- Mesure v76 aux bords : ~75 % des triangles au-delà de 100 m (mobilier métallique des lots decor-* 60 k, arbres 45 k, rayonnages de la librairie-encrier 25 k à 170 m, pare-chocs de voitures lointaines 24 k, intérieurs de commerces).
+- Moteur : it.far = p.far (collect) ; R.cull écarte au-delà de it.far (centre réel de la pièce). Module « v77 — LOINTAINS » (self.V79.passe, toutes les 1,5 s) : voitures 62 m, decor-* mat 22/12 135 m, petites pièces (< 8 m) des autres nœuds 100 m (EXCL : cité, arbres, train, émissifs, signalétique, marques, bâtiments, vitrines).
 
 -->
 </html>
