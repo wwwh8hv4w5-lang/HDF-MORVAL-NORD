@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v77</title>
+<title>HDF : MORVAL-NORD v78</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1582,7 +1582,7 @@ function createRenderer(gl,opt={}){
     gl.bindVertexArray(null);gl.bindFramebuffer(gl.FRAMEBUFFER,fbPrev);gl.viewport(vpPrev[0],vpPrev[1],vpPrev[2],vpPrev[3]);gl.deleteFramebuffer(fb);gl.useProgram(pgPrev);gl.deleteProgram(pg);gl.enable(gl.DEPTH_TEST);if(blendOn)gl.enable(gl.BLEND);
     gl.generateMipmap(gl.TEXTURE_2D_ARRAY);gl.texParameteri(gl.TEXTURE_2D_ARRAY,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D_ARRAY,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D_ARRAY,gl.TEXTURE_WRAP_T,gl.REPEAT);
-    const af=gl.getExtension('EXT_texture_filter_anisotropic');if(af)gl.texParameterf(gl.TEXTURE_2D_ARRAY,af.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(4,gl.getParameter(af.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+    const af=gl.getExtension('EXT_texture_filter_anisotropic');if(af)gl.texParameterf(gl.TEXTURE_2D_ARRAY,af.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(4,(gl.__afMax||(gl.__afMax=gl.getParameter(af.MAX_TEXTURE_MAX_ANISOTROPY_EXT)))));
     gl.bindTexture(gl.TEXTURE_2D_ARRAY,null);DET.tex=t;DET.ok=true;}catch(e){console.warn('FSM3D : détail indisponible',e);DET.ok=false;DET.tex=-1;}return DET.ok;}
   R.bindDetail=function(L){const on=R.features.detail&&R.Q.detail>0&&makeDetail();gl.uniform4f(L.uDetP,on?1:0,R.Q.detail||1,R.detailStrength===undefined?1:R.detailStrength,0);if(!on)return;
     gl.activeTexture(gl.TEXTURE0+UNIT.det);gl.bindTexture(gl.TEXTURE_2D_ARRAY,DET.tex);gl.activeTexture(gl.TEXTURE0);};
@@ -1622,7 +1622,7 @@ function createRenderer(gl,opt={}){
   // texture couleur (image, canvas, ImageBitmap) pour les modèles importés
   R.texture=function(img,{repeat=true,srgb=false}={}){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);try{if(!img||!(img.width||img.videoWidth))throw new Error('image vide');gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);}catch(e){console.warn('[texture] remplacée par une couleur neutre :',e&&e.message);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,2,2,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(16).fill(160));}gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);const w=repeat?gl.REPEAT:gl.CLAMP_TO_EDGE;gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,w);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,w);
-    const af=gl.getExtension('EXT_texture_filter_anisotropic');if(af)gl.texParameterf(gl.TEXTURE_2D,af.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,gl.getParameter(af.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));gl.bindTexture(gl.TEXTURE_2D,null);return t;};
+    const af=gl.getExtension('EXT_texture_filter_anisotropic');if(af)gl.texParameterf(gl.TEXTURE_2D,af.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,(gl.__afMax||(gl.__afMax=gl.getParameter(af.MAX_TEXTURE_MAX_ANISOTROPY_EXT)))));gl.bindTexture(gl.TEXTURE_2D,null);return t;};
   // texture de bruit 256² (normales en rg, hauteur en a) — utilisée par le ciel, le terrain et les matériaux
   R.noiseTexture=function(){const N=256,h=new Float32Array(N*N),hash=(x,y,s)=>{const v=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return v-Math.floor(v);};
   let amp=.5,tot=0;for(const [L,s] of [[8,1],[16,2],[32,3],[64,4],[128,5]]){const g=new Float32Array(L*L);for(let i=0;i<L*L;i++)g[i]=hash(i%L,(i/L)|0,s);
@@ -5995,8 +5995,12 @@ function pousser(p, r = .35, hmin = 0) { for (const b of (p.z > 200 ? W.COLLA : 
     if (mn === dl) p.x = b.x0 - r; else if (mn === dr) p.x = b.x1 + r; else if (mn === dt) p.z = b.z0 - r; else p.z = b.z1 + r; }
   if (p.z < 200) { const G = W.GARE; if (G && p.x > W.X1 - .7 && p.z > G.PZ0 - .6 && p.z < G.PZ1 + .6) { const ok = p.x >= G.QX0 - .45 || (p.z > 38.7 && p.z < 57.3); if (ok) { p.x = clamp(p.x, W.X0 + .6, G.xMax || G.QX1 - .1); return; } p.x = W.X1 - .6; return; } p.x = clamp(p.x, (p.z > FB.Z0 && p.z < FB.Z1 ? FB.X0 : W.X0) + .6, W.X1 - .6); p.z = clamp(p.z, W.Z0 + .6, W.Z1 - .6); } }   // z > 200 : intérieurs d'appartements
 // segment 2D libre (vue, tir au sol) : aucun obstacle de hauteur > hmin ne coupe [a,b]
-function segLibre(ax, az, bx, bz, hmin = 1.2) { const dx = bx - ax, dz = bz - az; for (const b of (az > 200 ? W.COLLA : W.COLL)) { if (b.h < hmin || (b.vitre && hmin > .5)) continue;
-    let t0 = 0, t1 = 1; for (const [p, d, lo, hi] of [[ax, dx, b.x0, b.x1], [az, dz, b.z0, b.z1]]) { if (Math.abs(d) < 1e-9) { if (p < lo || p > hi) { t0 = 2; break; } continue; } let ta = (lo - p) / d, tb = (hi - p) / d; if (ta > tb) [ta, tb] = [tb, ta]; t0 = Math.max(t0, ta); t1 = Math.min(t1, tb); if (t0 > t1) break; }
+function segLibre(ax, az, bx, bz, hmin = 1.2) { const dx = bx - ax, dz = bz - az, mnx = Math.min(ax, bx), mxx = Math.max(ax, bx), mnz = Math.min(az, bz), mxz = Math.max(az, bz), L = az > 200 ? W.COLLA : W.COLL, vit = hmin > .5;
+  /* v78 : même test qu'avant (dalles x puis z), sans tableaux temporaires, et boîtes hors de l'emprise du segment écartées d'emblée */
+  for (let k = 0, n = L.length; k < n; k++) { const b = L[k]; if (b.x1 < mnx || b.x0 > mxx || b.z1 < mnz || b.z0 > mxz || b.h < hmin || (b.vitre && vit)) continue;
+    let t0 = 0, t1 = 1;
+    if (Math.abs(dx) < 1e-9) { if (ax < b.x0 || ax > b.x1) continue; } else { let ta = (b.x0 - ax) / dx, tb = (b.x1 - ax) / dx; if (ta > tb) { const t = ta; ta = tb; tb = t; } if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; if (t0 > t1) continue; }
+    if (Math.abs(dz) < 1e-9) { if (az < b.z0 || az > b.z1) continue; } else { let ta = (b.z0 - az) / dz, tb = (b.z1 - az) / dz; if (ta > tb) { const t = ta; ta = tb; tb = t; } if (ta > t0) t0 = ta; if (tb < t1) t1 = tb; }
     if (t0 <= t1 && t1 > 0 && t0 < 1) return false; } return true; }
 // rayon 3D contre les boîtes (balles) : distance du premier obstacle ou Infinity
 function rayonMurs(o, d, max = 120) { let best = max; for (const b of (o[2] > 200 ? W.COLLA : W.COLL)) { let t0 = 0, t1 = best, ok = true;
@@ -6015,7 +6019,7 @@ function navLibre(x, z) { const i = Math.floor(x - NAV.x0), j = Math.floor(z - N
 function navProche(x, z) { if (navLibre(x, z)) return [x, z]; for (let r = 1; r < 8; r++) for (let a = 0; a < 16; a++) { const px = x + Math.cos(a / 16 * TAU) * r, pz = z + Math.sin(a / 16 * TAU) * r; if (navLibre(px, pz)) return [px, pz]; } return [x, z]; }
 function chemin(ax, az, bx, bz, maxN = 9000) { const N = NAV; [ax, az] = navProche(ax, az); [bx, bz] = navProche(bx, bz); if (segLibre(ax, az, bx, bz, .4)) return [[bx, bz]];
   const nx = N.nx, si = Math.floor(ax - N.x0) + Math.floor(az - N.z0) * nx, gi = Math.floor(bx - N.x0) + Math.floor(bz - N.z0) * nx, gx = gi % nx, gz = (gi / nx) | 0;
-  const g = new Float32Array(nx * N.nz).fill(1e9), from = new Int32Array(nx * N.nz).fill(-1), shut = new Uint8Array(nx * N.nz), heap = [], hf = [];
+  const NB = nx * N.nz; if (!chemin.B || chemin.B.n !== NB) chemin.B = { n: NB, g: new Float32Array(NB), from: new Int32Array(NB), shut: new Uint8Array(NB) }; const g = chemin.B.g.fill(1e9), from = chemin.B.from.fill(-1), shut = chemin.B.shut.fill(0), heap = [], hf = [];
   const push = (i, f) => { heap.push(i); hf.push(f); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (hf[p] <= hf[k]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; [hf[p], hf[k]] = [hf[k], hf[p]]; k = p; } };
   const pop = () => { const top = heap[0], lh = heap.pop(), lf = hf.pop(); if (heap.length) { heap[0] = lh; hf[0] = lf; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; if (l < heap.length && hf[l] < hf[m]) m = l; if (r < heap.length && hf[r] < hf[m]) m = r; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; [hf[m], hf[k]] = [hf[k], hf[m]]; k = m; } } return top; };
   const h = i => { const x = i % nx, z = (i / nx) | 0, dx = Math.abs(x - gx), dz = Math.abs(z - gz); return Math.max(dx, dz) + .414 * Math.min(dx, dz); };
@@ -8819,7 +8823,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '77'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '78'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -12960,13 +12964,19 @@ function dlBesoin(id) { try { const D = S && S.dl; if (!D) return false; for (co
 // interactions toujours atteignables : rayon d'action élargi quand un banc, un comptoir ou un étal empêche d'approcher assez près
 const ACCES73 = { n: -1, t: 3 };
 function majAcces73(dt) { ACCES73.t -= dt; if (ACCES73.t > 0 || !S || UI.titre || !W.COLL) return; ACCES73.t = 20; if (OBJETS.length === ACCES73.n) return; ACCES73.n = OBJETS.length;
-  const x0 = -172, z0 = -90, st = .2, nx = Math.ceil(282 / st), nz = Math.ceil(180 / st), G = new Uint8Array(nx * nz), R = .34;
-  for (const b of W.COLL) { if (!(b.h > .22)) continue; const lx = b.x1 - b.x0, lz = b.z1 - b.z0; if (Math.min(lx, lz) < .36 && Math.max(lx, lz) < 3.2) continue; const i0 = Math.max(0, Math.floor((b.x0 - R - x0) / st)), i1 = Math.min(nx - 1, Math.floor((b.x1 + R - x0) / st)), j0 = Math.max(0, Math.floor((b.z0 - R - z0) / st)), j1 = Math.min(nz - 1, Math.floor((b.z1 + R - z0) / st)); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) G[j * nx + i] = 1; }
+  const x0 = -172, z0 = -90, st = .2, nx = Math.ceil(282 / st), nz = Math.ceil(180 / st), R = .34, Gk = W.COLL.length, neuf = !(ACCES73.G && ACCES73.gk === Gk), G = neuf ? (ACCES73.G = new Uint8Array(nx * nz)) : ACCES73.G; ACCES73.gk = Gk;
+  if (neuf) for (const b of W.COLL) { if (!(b.h > .22)) continue; const lx = b.x1 - b.x0, lz = b.z1 - b.z0; if (Math.min(lx, lz) < .36 && Math.max(lx, lz) < 3.2) continue; const i0 = Math.max(0, Math.floor((b.x0 - R - x0) / st)), i1 = Math.min(nx - 1, Math.floor((b.x1 + R - x0) / st)), j0 = Math.max(0, Math.floor((b.z0 - R - z0) / st)), j1 = Math.min(nz - 1, Math.floor((b.z1 + R - z0) / st)); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) G[j * nx + i] = 1; }
   for (const ob of OBJETS) { if (ob.niv || ob._r0 !== undefined && ob._ok) continue; if (ob.x < x0 || ob.x > x0 + 282 || ob.z < z0 || ob.z > z0 + 180) continue; const r = ob.r || 1; if (ob._r0 === undefined) ob._r0 = r; let best = 1e9; const i0 = Math.floor((ob.x - 2.6 - x0) / st), i1 = Math.floor((ob.x + 2.6 - x0) / st), j0 = Math.floor((ob.z - 2.6 - z0) / st), j1 = Math.floor((ob.z + 2.6 - z0) / st);
     for (let j = Math.max(0, j0); j <= Math.min(nz - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(nx - 1, i1); i++) { if (G[j * nx + i]) continue; const d = Math.hypot(x0 + (i + .5) * st - ob.x, z0 + (j + .5) * st - ob.z); if (d < best) best = d; }
     ob._ok = true; if (best < 2.4 && best + .15 > ob._r0) ob.r = Math.max(ob._r0, best + .3); } }
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majAcces73(dt || .016); } catch (e) { } return _mp(dt, A); }; }
 self.V78 = { MIS73, misGaranties: () => misGaranties(self.A, true), phasePop, rangerAchats: pl => rangerAchats(pl), finirEtape: (m, i, e) => finirEtape(m, i, e), HEURE: h => { if (h !== undefined) { HEURE = h; S.heure = h; } return HEURE; }, OBJ: () => OBJETS, dlBesoin, navLibre: (x, z) => navLibre(x, z), navProche: (x, z) => navProche(x, z), segLibre: (a, b, c, d) => segLibre(a, b, c, d), liftPos: H => liftPos(H), SHOPPOS: () => SHOPPOS, ACCES73 };
+
+// ================================================================= v78 — SACCADES (mesure : images de 35 à 230 ms sur 60 s)
+// Causes : création du bus en jeu (6 textures + getParameter), A* et segLibre (allocations), grille de majAcces73 refaite. Ici : bus mis en cache par ligne,
+// préparé à l'écran titre (BUSC, retiré de la scène, réutilisé si son nœud n'est plus dans la scène).
+{ const BUSC = {}; const _cb = construireBus; construireBus = function (A, Lg) { const c = BUSC[Lg.n]; if (c && !c.nd.parent) { for (const p of c.portes) p.nd.pos = [p.x0, 1.42, 2.55 / 2 + .03]; A.add(c.nd); return c; } const r = _cb(A, Lg); if (!c) BUSC[Lg.n] = r; return r; };
+  const pre = setInterval(() => { try { const A = self.A; if (!A || !A.scene || typeof BUS_LIGNES === 'undefined') return; for (const Lg of BUS_LIGNES) if (!BUSC[Lg.n]) { const r = construireBus(A, Lg); A.remove(r.nd); return; } clearInterval(pre); } catch (e) { clearInterval(pre); } }, 700); self.V80 = { BUSC }; }
 
 // ================================================================= v77 — LOINTAINS (budget triangles depuis les bords de la carte)
 // pièce.far (m) : écartée au-delà de cette distance au centre réel de la pièce (R.cull, sphère englobante). Passe toutes les 1,5 s sur les nœuds de premier niveau
@@ -13432,6 +13442,10 @@ v76 — NIVEAUX DE DÉTAIL DES VOITURES (budget 500 k tri/image sur iPad)
 v77 — LOINTAINS (vues depuis les bords)
 - Mesure v76 aux bords : ~75 % des triangles au-delà de 100 m (mobilier métallique des lots decor-* 60 k, arbres 45 k, rayonnages de la librairie-encrier 25 k à 170 m, pare-chocs de voitures lointaines 24 k, intérieurs de commerces).
 - Moteur : it.far = p.far (collect) ; R.cull écarte au-delà de it.far (centre réel de la pièce). Module « v77 — LOINTAINS » (self.V79.passe, toutes les 1,5 s) : voitures 62 m, decor-* mat 22/12 135 m, petites pièces (< 8 m) des autres nœuds 100 m (EXCL : cité, arbres, train, émissifs, signalétique, marques, bâtiments, vitrines).
+
+v78 — SACCADES
+- Mesure (60 s, iPad simulé, rendu neutralisé) : médiane 11-13 ms, pics 35-230 ms. Profil : lancerBus → construireBus → R.texture ×6 → gl.getParameter (synchronisation GPU) 138 ms ; chemin()/segLibre (lissage du chemin : segLibre sur tout W.COLL avec 3 tableaux par boîte) 35-55 ms, récurrent ; majAcces73 (grille 1410 × 900 refaite) 20 ms.
+- Corrections : anisotropie lue une fois (gl.__afMax) ; segLibre réécrit sans allocation + rejet par emprise (même résultat) ; chemin.B = tampons A* réutilisés ; ACCES73.G grille en cache (clé W.COLL.length) ; module « v78 — SACCADES » : BUSC cache du bus par ligne, préparé pendant l'écran titre.
 
 -->
 </html>
