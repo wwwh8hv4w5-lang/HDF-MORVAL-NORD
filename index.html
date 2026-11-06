@@ -13149,7 +13149,11 @@ function cfAR15Copie(src) {
   if (src.matrix) n.matrix = new Float32Array(src.matrix);
   n.pickable = false; n.castShadow = false;
   // Géométrie/texture GPU partagée ; objets Node/parts indépendants pour chaque instance.
-  for (const p of src.parts) n.addPart(p.mesh, p.M, p.color, p.mat, { cast: false });
+  for (const p of src.parts) {
+    const c = p.color || [1, 1, 1];
+    // Albedo sombre du scan (luminance ~61/255) relevée pour la nuit ; le moteur n'applique pas la normal map.
+    n.addPart(p.mesh, p.M, [c[0] * 2.05, c[1] * 2.05, c[2] * 2.05], p.mat, { cast: false });
+  }
   for (const c of src.children) n.add(cfAR15Copie(c));
   return n;
 }
