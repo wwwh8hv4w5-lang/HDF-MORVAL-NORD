@@ -12442,7 +12442,7 @@ self.V76 = { VT, construireVT71, maj: (dt, A) => majVT71(dt, A) };
 const CFA = {
   ids: ['ar15', 'g36c', 'mp5', 'ump9'],
   W: {
-    ar15: { n: 'AR-15 SOPMOD', le: 'l’AR-15 SOPMOD', du: 'de l’AR-15 SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 75, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 230, recul: .016, disp: .0022, rech: 2.4, flash: 1.1, yR: .0852, zc: -.11, mz: [.001, .052, -.535], laser: [.028, .055, -.402] },
+    ar15: { n: 'AR-15 SOPMOD', le: 'l’AR-15 SOPMOD', du: 'de l’AR-15 SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 75, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 230, recul: .016, disp: .0022, rech: 2.4, flash: 1.1, yR: .0852, zc: -.08, mz: [.001, .052, -.535], laser: [.028, .055, -.402] },
     g36c: { n: 'HK-G36C SOPMOD', le: 'le HK-G36C SOPMOD', du: 'du HK-G36C SOPMOD', cal: '5,56 × 45 mm', mags: 3, prix: 3499.90, prixCh: 500, auto: true, cad: 80, puissance: 'Extrêmement élevée', atout: 'Dissuasion élevée', dis: .3, portee: 220, recul: .015, disp: .0024, rech: 2.5, flash: 1.05, yR: .066, mz: [0, .03, -.41], laser: [.039, .036, -.31] },
     mp5: { n: 'MP5 SOPMOD', le: 'le MP5 SOPMOD', du: 'du MP5 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 1399.90, prixCh: 250, auto: false, cad: 110, puissance: 'Moyenne-Élevée', atout: 'Dissuasion moyenne', dis: .15, portee: 130, recul: .009, disp: .003, rech: 2.6, flash: .75, yR: .088, mz: [0, .035, -.385], laser: [.041, .038, -.285] },
     ump9: { n: 'UMP9 SOPMOD', le: 'l’UMP9 SOPMOD', du: 'de l’UMP9 SOPMOD', cal: '9 × 19 mm', mags: 2, prix: 690.90, prixCh: 100, auto: false, cad: 110, puissance: 'Moyenne', atout: 'Dissuasion moyenne', dis: .15, portee: 110, recul: .011, disp: .0034, rech: 2.3, flash: .8, yR: .072, mz: [0, .03, -.365], laser: [.04, .03, -.27] } },
@@ -12528,7 +12528,7 @@ function cfTir(A, id, presse, maintenu) { const W = CFA.W[id], M = cfMun(id), mo
     const n = Math.min(30 - M.ch, M.res); M.res -= n; M.ch += n; J.rech = 1; J.rechD = W.rech * (1 - S.comp.tir * .08); SON.fx.rechargement(); majHudArme(); }; }
 { const _inj = PROC.injonction; PROC.injonction = function () { const t0 = J.injT; const r = _inj.apply(this, arguments); try { if (J.injT !== t0 && cfEst(J.arme) && !horsService()) { const k = CFA.W[J.arme].dis; for (const n of NPCS) { if (n.cache || n.menotte || n.dE > 20 || !(n.etat === 'agressif' || n.combat)) continue; if (chance(k * (n.arme === 'feu' ? .5 : 1))) cfReddition(n); } } } catch (e) { } return r; }; }
 function cfReddition(n) { if (n.arme === 'couteau' || n.arme === 'feu') { n.arme = null; n.props = []; if (n.indices && n.indices.add) n.indices.add('arme'); } n.etat = 'mains'; n.etatT = 25; n.menace = 1; n.combat = false; arreter(n); dire(n, pick(['OK ! OK ! Tirez pas !', 'C’est bon, c’est bon ! Je bouge plus !', 'Wesh, calme ! Je lâche, je lâche !', 'Je me rends ! Baissez ça !']), { prio: true }); gain(30, 4, 'Reddition obtenue sans tir (dissuasion)'); try { S.stats.desesc++; } catch (e) { } }
-function CFA_CIBLE(w) { const W = self.__CF && self.__CF.W[w]; return W ? [0, -(W.yR + .038), -.2] : null; }
+function CFA_CIBLE(w) { const W = self.__CF && self.__CF.W[w]; if (!W) return null; const zc = W.zc ?? -.02; return [0, -(W.yR + .038), -.2 - (zc + .02) * .5]; }
 
 // ---- modèles 3D (vue subjective + vitrines) : pièces ['b'|'c'|'s', dims, pos, rot, couleur, matériau]
 /* AR15_TOM_GLB_BEGIN */
