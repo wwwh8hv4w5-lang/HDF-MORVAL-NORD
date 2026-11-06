@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
-<title>HDF : MORVAL-NORD v81</title>
+<title>HDF : MORVAL-NORD v83</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="theme-color" content="#05070b">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1423,7 +1423,7 @@ function createRenderer(gl,opt={}){
   const planes=M3.frustum(M3.identity());let culled=[];
   R.cull=function(list,vp,eye){M3.frustum(vp,planes);if(culled.length<list.length)culled=new Array(list.length);let n=0;
     for(const it of list){const m=it.mesh,M=it.M;if(m&&m.bc){const c=m.bc,x=M[0]*c[0]+M[4]*c[1]+M[8]*c[2]+M[12],y=M[1]*c[0]+M[5]*c[1]+M[9]*c[2]+M[13],z=M[2]*c[0]+M[6]*c[1]+M[10]*c[2]+M[14];
-        const s=Math.sqrt(Math.max(M[0]*M[0]+M[1]*M[1]+M[2]*M[2],M[4]*M[4]+M[5]*M[5]+M[6]*M[6],M[8]*M[8]+M[9]*M[9]+M[10]*M[10])),rr=m.br*s;if(eye&&it.far){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2];if(ex*ex+ey*ey+ez*ez>it.far*it.far){R.stats.culled++;continue;}}/* v77 : distance d'affichage par pièce */if(eye&&rr<2.5){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2],d2=ex*ex+ey*ey+ez*ez,lim=rr<.7?32:rr<1.4?46:60;if(d2>lim*lim){R.stats.culled++;continue;}}/* HDF BASE : budget GPU — petits objets lointains écartés (brume) */if(!M3.sphereVisible(planes,x,y,z,rr+.05)){R.stats.culled++;continue;}}
+        const s=Math.sqrt(Math.max(M[0]*M[0]+M[1]*M[1]+M[2]*M[2],M[4]*M[4]+M[5]*M[5]+M[6]*M[6],M[8]*M[8]+M[9]*M[9]+M[10]*M[10])),rr=m.br*s;if(eye&&it.far){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2];if(ex*ex+ey*ey+ez*ez>it.far*it.far){R.stats.culled++;continue;}}/* v77 : distance d'affichage par pièce */if(eye&&rr<2.5&&!it.keep){const ex=x-eye[0],ey=y-eye[1],ez=z-eye[2],d2=ex*ex+ey*ey+ez*ez,lim=rr<.7?32:rr<1.4?46:60;if(d2>lim*lim){R.stats.culled++;continue;}}/* HDF BASE : budget GPU — petits objets lointains écartés (brume) */if(!M3.sphereVisible(planes,x,y,z,rr+.05)){R.stats.culled++;continue;}}
       culled[n++]=it;}
     return {items:culled,n};};
   // ---------- qualité
@@ -3403,7 +3403,7 @@ class Node{
   find(name){if(this.name===name)return this;for(const c of this.children){const f=c.find(name);if(f)return f;}return null;}
   traverse(fn){fn(this);for(const c of this.children)c.traverse(fn);}
   // pièce : maillage + matrice locale (facultative) + couleur + matériau ; o : {wind, maxDist, cast, name, op}
-  addPart(mesh,M,color,mat=0,o={}){const p={mesh,M:M?new Float32Array(M):null,color:color||[.6,.6,.6],mat,wind:o.wind||0,maxDist:o.maxDist||0,minDist:o.minDist||0,cast:o.cast!==false,name:o.name||'',op:o.op,it:null};this.parts.push(p);return p;}
+  addPart(mesh,M,color,mat=0,o={}){const p={mesh,M:M?new Float32Array(M):null,color:color||[.6,.6,.6],mat,wind:o.wind||0,maxDist:o.maxDist||0,minDist:o.minDist||0,keep:!!o.keep,cast:o.cast!==false,name:o.name||'',op:o.op,it:null};this.parts.push(p);return p;}
   setPos(x,y,z){this.pos[0]=x;this.pos[1]=y;this.pos[2]=z;return this;}
   setRot(x,y,z){this.rot[0]=x;this.rot[1]=y;this.rot[2]=z;return this;}
   setScale(x,y=x,z=x){this.scale[0]=x;this.scale[1]=y;this.scale[2]=z;return this;}
@@ -3424,7 +3424,7 @@ function createScene(){const S={root:new Node('scène'),nodes:[]};
           // matrice de l'image précédente (vitesse à l'écran pour le lissage temporel)
           const fresh=it.fr!==S.frame-1;if(!fresh)it.Mp.set(it.M);
           if(p.M)mulTo(it.M,w,p.M);else it.M.set(w);
-          if(fresh)it.Mp.set(it.M);it.fr=S.frame;let mv=false;const A=it.M,B=it.Mp;for(let i=0;i<15;i++){if(Math.abs(A[i]-B[i])>1e-5){mv=true;break;}}it.mv=mv;it.mesh=p.mesh;it.color=p.color;it.mat=p.mat;it.cast=p.cast&&nd.castShadow;it.dust=nd.dust;it.temp=nd.temp;it.op=p.op;it.far=p.far||0;out.push(it);n++;}}
+          if(fresh)it.Mp.set(it.M);it.fr=S.frame;let mv=false;const A=it.M,B=it.Mp;for(let i=0;i<15;i++){if(Math.abs(A[i]-B[i])>1e-5){mv=true;break;}}it.mv=mv;it.mesh=p.mesh;it.color=p.color;it.mat=p.mat;it.cast=p.cast&&nd.castShadow;it.dust=nd.dust;it.temp=nd.temp;it.op=p.op;it.far=p.far||0;it.keep=p.keep;out.push(it);n++;}}
       if(nd.drawFn)n+=nd.drawFn(out,eye);for(const c of nd.children)walk(c);};walk(S.root);return n;};
   // lumières attachées : node.light = {c:[r,g,b], i, r, offset:[x,y,z], spot:{dir:[x,y,z] local, cone:[cosExt,cosInt]}}
   S.lights=out=>{S.root.traverse(nd=>{if(!nd.visible||!nd.light)return;const L=nd.light,p=M3.xform(nd.world,L.offset||[0,0,0]);const e={p,c:L.c||[1,.9,.75],i:L.i||10,r:L.r||12};
@@ -8823,7 +8823,7 @@ self.collegueMenotte = collegueMenotte; self.BIN = BIN;
 
 // ================================================================= g7j — arrivée en RER (cinématique d'ouverture), prise de service à l'accueil du poste,
 // sièges du train, billet pour Morval-Ville et incident FSM RAIL COMPANY (trafic interrompu plusieurs jours)
-const HDF_VERSION = '81'; self.HDF_VERSION = HDF_VERSION;
+const HDF_VERSION = '83'; self.HDF_VERSION = HDF_VERSION;
 const INTRO = { actif: false, pass: [], sortis: false, ctrl: null, tObj: 0 };
 function introPrevue(st) { return !st.introFaite && !st.pos && !(self.__TEST_NORENDER && !self.__INTRO); }
 function travauxGare() { return !!(S && S.gareTravaux && (S.jour || 1) < S.gareTravaux); }
@@ -13021,6 +13021,108 @@ function majLeviathan(dt, A) { if (!LEV.nd) { construireLeviathan(A); return; } 
 { const _mp = majPNJ; majPNJ = function (dt, A) { try { majLeviathan(dt || .016, A || self.A); } catch (e) { LEV.err = String(e && e.message); } return _mp(dt, A); }; }
 self.V82 = LEV;
 
+// ================================================================= v82 — HÉLICOPTÈRES D'ESCORTE (3 appareils de combat en ronde autour du Léviathan)
+// A.make('helico') (rotors animés par le moteur) + nœud d'armement fusionné : ailerons, paniers de roquettes, canon de nez, boule optique, projecteur,
+// feux (vert/rouge, anticollision clignotant). Projecteur : faisceau émissif (nœud 'lev-faisceau', balayage lent, visible la nuit seulement) + vraie lumière spot.
+// Ronde : rayon 85-110 m autour du dirigeable, 25 à 45 m sous lui, un tour en 70 s, cabré/incliné dans les virages. Pièces keep (jamais écartées de loin).
+const HEL = { L: [], t: 0 };
+function construireHelicos(A) { if (HEL.L.length || !A || !A.R || !LEV.nd) return; const R = A.R, T = M3.translate, S = M3.scale, mul = M3.mul, RX = M3.rotX, RZ = M3.rotZ;
+  for (let i = 0; i < 3; i++) { const h = A.make('helico', { x: 0, z: 0, color: [.16, .18, .15], spatial: false }); h.name = 'helico-escorte'; h.pickable = false; h.castShadow = false;
+    const m = GEO.merger(), N = [.07, .07, .08], G = [.2, .22, .19];
+    m.add(GEO.roundBox(5.2, .12, .9, .04), T(0, 1.35, -.6), G, 10);
+    for (const s of [-1, 1]) { m.add(GEO.cylinder(10), mul(T(s * 2.15, 1.05, -.6), mul(RX(PI / 2), S(.62, 1.9, .62))), N, 7); m.add(GEO.cylinder(8), mul(T(s * 1.35, 1.05, -.7), mul(RX(PI / 2), S(.34, 2.6, .34))), [.3, .3, .28], 7);
+      for (let k = 0; k < 7; k++) { const a = k / 7 * TAU; m.add(GEO.cylinder(6), mul(T(s * 2.15 + Math.cos(a) * .19, 1.05 + Math.sin(a) * .19, -1.58), mul(RX(PI / 2), S(.08, .05, .08))), [.02, .02, .02], 7); } }
+    m.add(GEO.sphere(10, 8), mul(T(0, .48, -3.0), S(.62, .62, .62)), [.1, .1, .11], 7); m.add(GEO.roundBox(.36, .2, .04, .02), T(0, .48, -3.32), [.05, .12, .2], 14);
+    m.add(GEO.cylinder(8), mul(T(0, .3, -2.4), S(.34, .3, .34)), N, 7); m.add(GEO.cylinder(8), mul(T(0, .1, -2.95), mul(RX(PI / 2), S(.09, 1.3, .09))), N, 7);
+    m.add(GEO.cylinder(12, .5, .5), mul(T(0, .32, -1.9), S(.5, .32, .5)), N, 7); m.add(GEO.cylinder(12, .5, .5), mul(T(0, .15, -1.9), S(.42, .02, .42)), [3.2, 3.1, 2.8], 8);
+    const vert = [.1, 2.6, .5], rouge = [3, .15, .1]; m.add(GEO.sphere(6, 4), mul(T(2.65, 1.36, -.6), S(.14, .14, .14)), vert, 8); m.add(GEO.sphere(6, 4), mul(T(-2.65, 1.36, -.6), S(.14, .14, .14)), rouge, 8);
+    const arm = new F.Node('lev-armement'); for (const p of m.build(a => R.makeMesh(a))) arm.addPart(p.mesh, null, p.color, p.mat, { cast: false, keep: true }); h.add(arm);
+    const flash = new F.Node('lev-flash'); flash.setPos(0, 2.75, .4); const fp = flash.addPart(R.makeMesh(GEO.sphere(6, 4)), S(.22, .22, .22), [3, .1, .08], 8, { cast: false, keep: true }); h.add(flash);
+    const fx = new F.Node('lev-faisceau'); fx.setPos(0, .15, -1.9); const L = 150, fq = fx.addPart(R.makeMesh(GEO.cylinder(14, .02, .5)), mul(T(0, -L / 2, 0), S(30, L, 30)), [.11, .115, .125], 8, { cast: false, keep: true }); h.add(fx);
+    h.traverse(n => { for (const p of n.parts) p.keep = true; });
+    A.add(h); HEL.L.push({ h, fx, fp, fq, i, ph: i * TAU / 3 }); } }
+function majHelicos(dt, A) { if (!LEV.nd || LEV.nd.visible === false) return; if (!HEL.L.length) { construireHelicos(A); return; } HEL.t += dt; const t = HEL.t, P = LEV.nd.pos, nt = (() => { try { return nuit(); } catch (e) { return 1; } })();
+  for (const o of HEL.L) { const w = TAU / 70, a = o.ph + t * w, r = 97 + 13 * Math.sin(t * .13 + o.i * 2.1), y = P[1] - 35 + 10 * Math.sin(t * .17 + o.i * 1.7);
+    const x = P[0] + Math.cos(a) * r, z = P[2] + Math.sin(a) * r, vx = -Math.sin(a), vz = Math.cos(a), yaw = Math.atan2(-vx, -vz);
+    o.h.pos = [x, y, z]; o.h.rot = [-.1 + .03 * Math.sin(t * .5 + o.i), yaw, -.26 + .04 * Math.sin(t * .31 + o.i)];
+    o.fp.color = (t * 1.1 + o.i * .3) % 1 < .12 ? [3, .1, .08] : [.08, .01, .01];
+    const sw = Math.sin(t * .23 + o.i * 2) * .55; o.fx.rot = [.42 + .18 * Math.sin(t * .19 + o.i), sw, 0];
+    o.fq.maxDist = 1e-6; o.bk = nt > .25 ? Math.min(1, (nt - .25) / .15) : 0;   /* v83b : faisceau dessiné en lumière additive (FX83) */
+    if (nt > .25) { const W2 = o.fx.world; if (W2) { let dx = -W2[4], dy = -W2[5], dz = -W2[6]; const l = Math.hypot(dx, dy, dz) || 1; try { A.addLight({ p: [W2[12], W2[13], W2[14]], c: [1, .97, .9], i: 70, r: 230, dir: [dx / l, dy / l, dz / l], cone: [.992, .998] }); } catch (e) { } } } } }
+{ const _mp = majPNJ; majPNJ = function (dt, A) { try { majHelicos(dt || .016, A || self.A); } catch (e) { HEL.err = String(e && e.message); } return _mp(dt, A); }; }
+self.V83 = HEL;
+
+// ================================================================= v83 — FSM LÉVIATHAN : pavillon, nom de coque, horaires de nuit, grands projecteurs de balayage
+// Horaires (HEURE de jeu) : approche 19 h 20 → 20 h 00 (ligne droite depuis 1,5 km, tangente à l'orbite), ronde 20 h → 4 h 30, départ 4 h 30 → 5 h 20
+// (s'éloigne et monte), invisible le reste du temps (LEV.nd.visible = false, escorte aussi). Angle d'orbite intégré en temps réel (LEV.t) pendant la présence.
+// Pavillon : maillage de la toile du drapeau de la cité (DRP.arr, même texture DRP.tex) × 3 sur un mât de poupe, flotte vers l'arrière.
+// Balayage : toutes les 10 min réelles de présence (premier 60 s après l'arrivée), 50 s : 6 projecteurs sous les enveloppes (faisceaux émissifs + lumières spot)
+// visent des points qui parcourent la cité (Lissajous), fondu 3 s.
+const L83 = { ok: false, flag: null, flagMesh: null, beams: [], scanT: 0, scanNext: 60, scan: -1, etat: 'absent', th0: 0, k: 0 };
+function lev83Extras(A) { if (L83.ok || !LEV.nd || !DRP.arr || !DRP.tex) return; const R = A.R, T = M3.translate, S = M3.scale, mul = M3.mul;
+  const mat = new F.Node('lev-mat'); mat.setPos(0, 1, 106); mat.addPart(R.makeMesh(GEO.cylinder(10, .5, .5)), mul(T(0, 11, 0), S(.7, 22, .7)), [.2, .21, .23], 7, { cast: false, keep: true }); mat.addPart(R.makeMesh(GEO.sphere(8, 6)), mul(T(0, 22.4, 0), S(1, 1, 1)), [.85, .68, .3], 7, { cast: false, keep: true }); LEV.nd.add(mat);
+  const fm = R.makeMesh(DRP.arr, { uv: true, noWeld: true, tex: DRP.tex, rough: .92 }); fm.br = DRP.L * 3 + 4; const fl = new F.Node('lev-pavillon'); fl.setPos(0, 22.6, 106.4); fl.rot = [0, -PI / 2, 0]; fl.addPart(fm, S(3, 3, 3), [1.45, 1.45, 1.45], 30, { cast: false, keep: true }); LEV.nd.add(fl); L83.flag = fl; L83.flagMesh = fm;
+  // nom sur les flancs extérieurs
+  const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 256; const g = cv.getContext('2d'); g.font = '900 190px "Barlow Condensed","Arial Narrow",Arial,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineJoin = 'round'; g.lineWidth = 14; g.strokeStyle = 'rgba(10,10,12,1)'; g.strokeText('FSM GOLIATH', 1024, 136, 1960); g.fillStyle = '#e9e7df'; g.fillText('FSM GOLIATH', 1024, 136, 1960);
+  const tex = R.texture(cv, { repeat: false }), W2 = 70, H2 = 8.75;
+  for (const s of [-1, 1]) { const nx = s, nz = 0, rx = nz, rzz = -nx, a = [], V = (u, v) => a.push(rx * (u - .5) * W2, (.5 - v) * H2, rzz * (u - .5) * W2, nx, 0, nz, u, v); V(0, 0); V(0, 1); V(1, 1); V(0, 0); V(1, 1); V(1, 0);
+    const q = new F.Node('lev-nom'); q.setPos(s * (34 + 24 * .92 + .45), 3, -10); q.addPart(R.makeMesh(new Float32Array(a), { uv: true, tex, alphaCut: .4, rough: .8, noWeld: true }), null, [.75, .75, .72], 31, { cast: false, keep: true }); LEV.nd.add(q); }
+  // six projecteurs de balayage (nœuds de premier niveau, orientés en repère monde)
+  const cone = R.makeMesh(GEO.cylinder(16, .01, .5));
+  for (const [x, z] of [[-34, -95], [34, -95], [-34, 0], [34, 0], [-34, 95], [34, 95]]) { const b = new F.Node('lev-scan'); b.pickable = false; b.castShadow = false; const p = b.addPart(cone, mul(T(0, -115, 0), S(36, 230, 36)), [0, 0, 0], 8, { cast: false, keep: true }); p.maxDist = 1e-6;
+    b.addPart(R.makeMesh(GEO.sphere(8, 6)), S(2.6, 2.6, 2.6), [.2, .2, .2], 8, { cast: false, keep: true }); A.add(b); L83.beams.push({ b, p, lp: b.parts[1], loc: [x, -24.5, z], k: L83.beams.length }); }
+  L83.ok = true; }
+const lerp83 = (a, b, f) => a + (b - a) * f, ease83 = f => f * f * (3 - 2 * f);
+majLeviathan = function (dt, A) { if (!LEV.nd) { construireLeviathan(A); return; } if (!L83.ok) lev83Extras(A);
+  const h = HEURE_JEU(), hh = h < 12 ? h + 24 : h, A0 = 19 + 20 / 60, D0 = 28.5, D1 = 29 + 20 / 60;
+  const etat = hh >= A0 && hh < 20 ? 'approche' : hh >= 20 && hh < D0 ? 'ronde' : hh >= D0 && hh < D1 ? 'depart' : 'absent';
+  const vis = etat !== 'absent'; LEV.nd.visible = vis; for (const o of HEL.L) o.h.visible = vis;
+  if (etat !== L83.etat) { if (etat === 'depart') L83.th0 = LEV.t / LEV.T * TAU; if (etat === 'approche' || (etat === 'ronde' && L83.etat === 'absent')) { L83.scanT = 0; L83.scanNext = 60; } L83.etat = etat; }
+  if (!vis) { for (const B of L83.beams) { B.p.maxDist = 1e-6; B.on = 0; B.b.visible = false; } L83.scan = -1; return; }
+  LEV.t += dt; const th = (etat === 'depart' ? L83.th0 : LEV.t / LEV.T * TAU), R0 = LEV.R;
+  let x = Math.sin(th) * R0, z = Math.cos(th) * R0, y = LEV.Y + Math.sin(LEV.t * .11) * 4; const dx = Math.cos(th), dz = -Math.sin(th);
+  if (etat === 'approche') { const f = ease83((hh - A0) / (20 - A0)); x = lerp83(x - dx * 1500, x, f); z = lerp83(z - dz * 1500, z, f); y = lerp83(y + 60, y, f); }
+  if (etat === 'depart') { const f = (hh - D0) / (D1 - D0), e = f * f; x += dx * 1500 * e; z += dz * 1500 * e; y += 90 * e; }
+  LEV.nd.pos = [x, y, z]; LEV.nd.rot = [Math.sin(LEV.t * .07) * .018, Math.atan2(-dx, -dz), etat === 'ronde' ? -.05 + Math.sin(LEV.t * .09) * .012 : 0];
+  for (const hl of LEV.helices) hl.rot = [0, 0, (hl.rot[2] || 0) + dt * 2.2];
+  if (L83.flagMesh && (L83.k = (L83.k + 1) % 2) === 0) { const gl = A.R.gl; gl.bindBuffer(gl.ARRAY_BUFFER, L83.flagMesh.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, DRP.arr); }
+  let nt = 1; try { nt = nuit(); } catch (e) { }
+  if (nt > .2 && L83.scan < 0) try { A.addLight({ p: [x, y - 30, z], c: [.9, .95, 1], i: 60, r: 220, dir: [0, -1, 0], cone: [.985, .996] }); } catch (e) { }
+  // balayage
+  if (etat === 'ronde') { L83.scanT += dt; if (L83.scan < 0 && L83.scanT >= L83.scanNext) { L83.scan = 0; L83.scanNext = L83.scanT + 600; try { SON.fx.bip && SON.fx.bip(); } catch (e) { } } }
+  const Wm = LEV.nd.world;
+  for (const B of L83.beams) { B.b.visible = true; const l = B.loc, px = Wm ? Wm[0] * l[0] + Wm[4] * l[1] + Wm[8] * l[2] + Wm[12] : x, py = Wm ? Wm[1] * l[0] + Wm[5] * l[1] + Wm[9] * l[2] + Wm[13] : y, pz = Wm ? Wm[2] * l[0] + Wm[6] * l[1] + Wm[10] * l[2] + Wm[14] : z; B.b.pos = [px, py, pz];
+    let fd = 0; if (L83.scan >= 0) { const s = L83.scan; fd = Math.min(1, s / 3, (50 - s) / 3); }
+    if (fd <= 0) { B.p.maxDist = 1e-6; B.on = 0; B.lp.color = [.22, .22, .22]; continue; }
+    const k = B.k, s = L83.scan, tx = 85 * Math.sin(s * .21 + k * 1.05) , tz = -5 + 62 * Math.sin(s * .17 + k * 2.3 + .7);
+    let vx = tx - px, vy = .5 - py, vz = tz - pz; const ln = Math.hypot(vx, vy, vz) || 1; vx /= ln; vy /= ln; vz /= ln;
+    B.b.rot = [Math.acos(Math.max(-1, Math.min(1, -vy))), Math.atan2(-vx, -vz), 0]; B.p.maxDist = 1e-6; B.on = fd; B.lp.color = [3.2 * fd + .2, 3.1 * fd + .2, 2.8 * fd + .2];
+    if (k < 4 || L83.scan % 2 < 1) try { A.addLight({ p: [px, py - 1, pz], c: [1, .97, .9], i: 95 * fd, r: 270, dir: [vx, vy, vz], cone: [.9935, .9985] }); } catch (e) { } }
+  if (L83.scan >= 0) { L83.scan += dt; if (L83.scan > 50) L83.scan = -1; } };
+self.V84 = L83;
+
+// v83b — faisceaux lumineux (escorte + balayage) : cônes dessinés après la passe opaque en mélange additif (ONE, ONE), sans écriture de profondeur,
+// atténués sur les bords (silhouette) et le long du faisceau. Remplace l'ancien cône opaque mat. 8 gris (couleur [.11,.115,.125] / [.15,.155,.165]).
+const FX83 = { ok: false, P: null, m: {} };
+FX83.init = gl => { if (FX83.P) return; const sh = (t, src) => { const o = gl.createShader(t); gl.shaderSource(o, src); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, '#version 300 es\nlayout(location=0) in vec3 aP; layout(location=1) in vec3 aN; uniform mat4 uVP; uniform mat4 uM; out vec3 vW; out vec3 vN; out float vT; out float vC;\nvoid main(){ vec4 w = uM * vec4(aP, 1.0); vW = w.xyz; vN = normalize(transpose(inverse(mat3(uM))) * aN); vT = .5 - aP.y; vC = abs(aN.y); gl_Position = uVP * w; }'));
+  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, '#version 300 es\nprecision highp float; in vec3 vW; in vec3 vN; in float vT; in float vC; uniform vec3 uEye; uniform vec3 uCol; uniform float uI; uniform float uLin; out vec4 o;\nvoid main(){ vec3 v = normalize(uEye - vW); float e = pow(abs(dot(normalize(vN), v)), 1.6); float t = clamp(vT, 0.0, 1.0); float f = pow(1.0 - t, 1.7) * (.35 + .65 * smoothstep(0.0, .04, t)) + .5 * exp(-t * 40.0);\n  float k = e * f * uI * (1.0 - smoothstep(.6, .95, vC)); if (k < .0015) discard; vec3 c = uCol; if (uLin > .5) c = pow(c, vec3(2.2)); o = vec4(c * k, 0.0); }'));
+  gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); const u = {}; for (const k of ['uVP', 'uM', 'uEye', 'uCol', 'uI', 'uLin']) u[k] = gl.getUniformLocation(p, k); FX83.P = { p, u };
+  const mk = a => { const vao = gl.createVertexArray(); gl.bindVertexArray(vao); const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 24, 0); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 24, 12); gl.bindVertexArray(null); return { vao, n: a.length / 6 }; };
+  FX83.m.hel = mk(GEO.cylinder(14, .02, .5)); FX83.m.scan = mk(GEO.cylinder(16, .01, .5)); };
+FX83.draw = (A, vpj, eye) => { const L = []; if (LEV.nd && LEV.nd.visible !== false) { for (const o of HEL.L) if (o.bk > 0 && o.h.visible !== false && o.fq.M) L.push([FX83.m, 'hel', M3.mul(o.fx.world, o.fq.M), .55 * o.bk]);
+    for (const B of L83.beams) if (B.on > 0 && B.b.visible && B.p.M) L.push([FX83.m, 'scan', M3.mul(B.b.world, B.p.M), .6 * B.on]); }
+  if (!L.length) return; const gl = A.R.gl; FX83.init(gl); const P = FX83.P, lin = A.R.Q && A.R.Q.post ? 1 : 0;
+  const prevProg = gl.getParameter(gl.CURRENT_PROGRAM), bl = gl.isEnabled(gl.BLEND), cu = gl.isEnabled(gl.CULL_FACE), dm = gl.getParameter(gl.DEPTH_WRITEMASK), dt = gl.isEnabled(gl.DEPTH_TEST),
+    bf = [gl.getParameter(gl.BLEND_SRC_RGB), gl.getParameter(gl.BLEND_DST_RGB), gl.getParameter(gl.BLEND_SRC_ALPHA), gl.getParameter(gl.BLEND_DST_ALPHA)];
+  gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.uVP, false, vpj); gl.uniform3fv(P.u.uEye, eye); gl.uniform3fv(P.u.uCol, [1, .95, .84]); gl.uniform1f(P.u.uLin, lin);
+  gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.ONE, gl.ONE, gl.ZERO, gl.ONE); gl.depthMask(false); gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
+  for (const [m, k, M, i] of L) { gl.uniformMatrix4fv(P.u.uM, false, M); gl.uniform1f(P.u.uI, i); gl.bindVertexArray(m[k].vao); gl.drawArrays(gl.TRIANGLES, 0, m[k].n); }
+  gl.bindVertexArray(null); gl.blendFuncSeparate(bf[0], bf[1], bf[2], bf[3]); if (!bl) gl.disable(gl.BLEND); if (cu) gl.enable(gl.CULL_FACE); if (!dt) gl.disable(gl.DEPTH_TEST); gl.depthMask(dm); gl.useProgram(prevProg); };
+{ const _mp = majPNJ; majPNJ = function (dt, A) { const a = A || self.A; if (!FX83.ok && a && a.onAfterOpaque && a.R) { FX83.ok = true; a.onAfterOpaque((vpj, eye) => { try { FX83.draw(a, vpj, eye); } catch (e) { if (!FX83.err) { FX83.err = String(e && e.message); console.error('faisceaux', e); } } }); } return _mp(dt, A); }; }
+self.V85 = FX83;
+
 // ================================================================= v80 — DRAPEAU DE LA CITÉ (mât de 14 m sur la pelouse centrale, x 29,5 · z 9,5)
 // Toile 5,4 × 3,6 m : grille 28 × 16 recto + verso (normales opposées), sommets recalculés à chaque image (ondes progressives croissant vers le battant,
 // rafales, affaissement par vent faible, plis secondaires en diagonale), normales par différences finies, envoi par bufferSubData sur mesh.buf.
@@ -13088,7 +13190,7 @@ self.V81 = DRP;
 // métallique (decor-*, mat 22 et 12) à 135 m, petites pièces (< 8 m de rayon) des commerces et intérieurs à 100 m. Émissifs (8, 31), signalétique, marques et bâtiments exclus.
 { const LO77 = { n: 0 }; self.V79 = LO77;
   const sc = m => m ? Math.sqrt(Math.max(m[0] * m[0] + m[1] * m[1] + m[2] * m[2], m[4] * m[4] + m[5] * m[5] + m[6] * m[6], m[8] * m[8] + m[9] * m[9] + m[10] * m[10])) : 1;
-  const EXCL = /^(leviathan|lev-|drapeau|cite|arbre|train|fenetres|horizon|neon|secteur|ciel|siel|vm-|marque|balisage|OBJ|proj|feux|gyro|strobe|eclairage|enseigne|led|voyant|stade|guirlande|riviere|auto-loin|grue|habillage|quartier|facades|gare|batiment|poste-facade|vitrines)/;
+  const EXCL = /^(helico|leviathan|lev-|drapeau|cite|arbre|train|fenetres|horizon|neon|secteur|ciel|siel|vm-|marque|balisage|OBJ|proj|feux|gyro|strobe|eclairage|enseigne|led|voyant|stade|guirlande|riviere|auto-loin|grue|habillage|quartier|facades|gare|batiment|poste-facade|vitrines)/;
   LO77.passe = () => { const A = self.A; if (!A || !A.scene) return; for (const nd of A.scene.root.children) { if (nd.__lo77) continue; const nm = nd.name || '';
       if (nm === 'voiture') nd.traverse(c => { for (const p of c.parts) if (!p.far) p.far = 62; });
       else if (/^decor-/.test(nm)) { for (const p of nd.parts) if ((p.mat === 22 || p.mat === 12) && !p.far) p.far = 135; }
@@ -13561,6 +13663,14 @@ v80 — DRAPEAU DE LA CITÉ
 
 v81 — LÉVIATHAN (cuirassé aérien original)
 - Module « v81 — LÉVIATHAN » (self.V82 = LEV) : construit au premier majPNJ. Nœud 'leviathan' (pièces fusionnées par matériau) + 8 nœuds 'lev-helice' tournants. Orbite rayon 260 m, altitude 165 m, période 540 s, cap tangent (yaw = atan2(-dx, -dz)), roulis et tangage lents. Nuit : projecteur vers le sol (addLight). EXCL v77 : leviathan, lev-.
+
+v82 — HÉLICOPTÈRES D'ESCORTE
+- Moteur : pièce.keep (addPart o.keep → it.keep) : exclue du découpage des petits objets lointains (R.cull rr < 2,5).
+- Module « v82 — HÉLICOPTÈRES » (self.V83 = HEL), après LEV : 3 × A.make('helico') renommés 'helico-escorte' + 'lev-armement' (fusionné) + 'lev-flash' (anticollision) + 'lev-faisceau' (cône émissif 150 m, masqué de jour par maxDist 1e-6). Ronde autour de LEV.nd.pos (rayon 85-110 m, 25-45 m dessous, 70 s), lumière spot dans l'axe du faisceau (o.fx.world, image précédente). EXCL v77 : helico.
+
+v83 — FSM LÉVIATHAN : pavillon, nom, horaires, balayage
+- Module « v83 » (self.V84 = L83) : majLeviathan réassignée. États : approche 19 h 20-20 h (depuis 1,5 km), ronde 20 h-4 h 30, départ 4 h 30-5 h 20, absent sinon (visible = false, escorte HEL aussi). LEV.t avance seulement pendant la présence.
+- lev83Extras : mât de poupe + 'lev-pavillon' (maillage DRP.arr ×3, texture DRP.tex, recopié une image sur deux), 'lev-nom' ×2 (« FSM  LÉVIATHAN », mat 31 + alphaCut) sur les flancs extérieurs, 6 'lev-scan' (nœuds monde : cône émissif 230 m + lentille). Balayage toutes les 600 s réelles de ronde (premier à 60 s), 50 s, cibles Lissajous sur la cité, rotation monde [acos(-dy), atan2(-dx,-dz), 0] (Ry·Rx·Rz), spots addLight (4 en permanence, 2 en alternance).
 
 -->
 </html>
