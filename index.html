@@ -5357,7 +5357,7 @@ const chance = p => Math.random() < p;
 const dist2 = (ax, az, bx, bz) => Math.hypot(ax - bx, az - bz);
 const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > PI) d -= TAU; if (d < -PI) d += TAU; return d; };
 const now = () => performance.now();
-const TOUCH = matchMedia('(pointer:coarse)').matches || navigator.maxTouchPoints > 1;
+let TOUCH = matchMedia('(pointer:coarse)').matches || (navigator.maxTouchPoints > 1 && !matchMedia('(any-pointer:fine)').matches); // mode de départ ; ensuite il suit l'entrée réelle (modeEntree)
 const MOBILE = /iPhone|iPad|iPod|Android/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 if (TOUCH) document.body.classList.add('touch');
 
@@ -6191,6 +6191,10 @@ CV.addEventListener('mousedown', e => { SON.init(); if (UI.ouvert() || TOUCH) re
 addEventListener('mouseup', e => { if (e.button === 0) INP.fire = false; if (e.button === 2) INP.aim = false; });
 addEventListener('mousemove', e => { if (document.pointerLockElement === CV) { INP.ldx += e.movementX; INP.ldy += e.movementY; } });
 CV.addEventListener('contextmenu', e => e.preventDefault());
+// écran tactile + souris (PC hybride) : le mode suit l'entrée réellement utilisée, pas le matériel détecté
+function modeEntree(tactile) { if (tactile === TOUCH) return; TOUCH = tactile; if (TOUCH && document.pointerLockElement) document.exitPointerLock(); if (!GP.connecte) { document.body.classList.toggle('touch', TOUCH); if (S && !UI.titre) $('tc').hidden = !TOUCH; } try { appliquerTexte(); } catch (_) {} }
+addEventListener('pointerdown', e => modeEntree(e.pointerType !== 'mouse'), true);
+addEventListener('pointermove', e => { if (TOUCH && e.pointerType === 'mouse' && (e.movementX || e.movementY)) modeEntree(false); }, true);
 CV.addEventListener('wheel', e => { if (UI.ouvert()) return; ev(e.deltaY > 0 ? 'next' : 'prev'); }, { passive: true });
 
 // tactile : bâton virtuel à gauche, regard en glissant à droite, boutons
